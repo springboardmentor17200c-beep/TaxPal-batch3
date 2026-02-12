@@ -1,16 +1,155 @@
-# React + Vite
+# TaxPal Frontend – Batch 3
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository contains the **Frontend Authentication Module** of the TaxPal project developed using React (Vite).
 
-Currently, two official plugins are available:
+It includes:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Signup Page
+- Login Page
+- Forgot Password functionality
+- Custom Dropdown Components
+- Glassmorphism UI Design
+- Fully Responsive Layout
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Tech Stack
 
-## Expanding the ESLint configuration
+- React (Vite)
+- React Router DOM
+- Lucide React (Icons)
+- Custom CSS
+- Glassmorphism UI Design
+- Poppins Font
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 📦 Installation & Setup Guide
+
+Follow the steps below to run the project locally.
+
+---
+
+### 1️⃣ Clone the Repository
+
+    
+    git clone https://github.com/springboardmentor17200c-beep/TaxPal-batch3.git
+    
+2️⃣ Navigate to Frontend Folder
+  
+      cd TaxPal-batch3/FrontEnd/frontend-auth
+      
+3️⃣ Install Dependencies
+  
+    Make sure Node.js (v18 or above) is installed.
+
+Then run:
+
+    npm install
+    
+This installs:
+
+    react
+    
+    react-router-dom
+    
+    lucide-react
+    
+    vite
+    
+    and other required dependencies
+
+4️⃣ Run the Development Server
+
+      npm run dev
+      
+After running, you will see something like:
+
+    Local: http://localhost:5173/
+Open that URL in your browser.
+
+📁 Project Structure
+
+        TaxPal-batch3/
+        └── FrontEnd/
+            └── frontend-auth/
+                ├── src/
+                │   ├── pages/
+                │   │   ├── Signup.jsx
+                │   │   ├── Login.jsx
+                │   │
+                │   ├── components/
+                │   │   ├── CustomDropdown.jsx
+                │   │
+                │   ├── styles/
+                │   │   ├── signup.css
+                │   │   ├── login.css
+                │   │   ├── dropdown.css
+                │   │
+                │   ├── App.jsx
+                │   ├── main.jsx
+                │
+                ├── public/
+                ├── package.json
+                ├── vite.config.js
+                
+✨ Features Implemented
+
+  🔐 Signup Page
+  
+        Glassmorphism UI
+        
+        Custom dropdown (Country & Income Bracket)
+        
+        Animated left section
+        
+        Responsive layout
+        
+        Left section hidden on mobile
+        
+        Smooth hover & focus effects
+
+🔑 Login Page
+
+    Glassmorphism card design
+    
+    Forgot Password toggle inside same card
+    
+    Slide animations (left & bottom)
+    
+    Responsive design
+    
+    Back to Login toggle
+
+🎨 UI Highlights
+
+    Poppins Font
+    
+    Gradient Backgrounds
+    
+    Custom Styled Inputs
+    
+    Glow Focus Effects
+    
+    Hover Animations
+    
+    Fully Responsive Design
+
+🛠 Git Workflow Used
+    Created a new branch:
+
+      git checkout -b frontend-auth-pages
+      
+Added changes:
+
+    git add .
+    
+Committed:
+
+    git commit -m "Added Signup and Login UI with animations"
+    
+Pushed branch:
+
+    git push -u origin frontend-auth-pages
+    
+Merged into main branch after review.
