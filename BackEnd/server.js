@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
+import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import transactionRoutes from "./routes/transaction.js";
 
 const app = express();
+connectDB();
 
 app.use(cors());
 app.use(express.json());
