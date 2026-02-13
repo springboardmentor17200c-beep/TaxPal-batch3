@@ -1,18 +1,27 @@
-import { Mail, Lock,BarChart3 } from "lucide-react";
-import { Link } from "react-router-dom";
-import "../styles/login.css";
+import { Mail, Lock, BarChart3 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import "../../styles/login.css";
 import { useState } from "react";
 
 
 const Login = () => {
-
   const [isResetMode, setIsResetMode] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    console.log("Logging in with", email, password);
+    // TODO: Integrate with actual backend
+    if (email && password) {
+      navigate("/dashboard");
+    } else {
+      alert("Please enter email and password");
+    }
+  };
 
   return (
-
-
-
-
     <div className="login-container">
 
       {/* LEFT SECTION */}
@@ -74,14 +83,19 @@ const Login = () => {
         <div className="glass-card">
 
           {!isResetMode ? (
-            <>
+            <form onSubmit={handleLogin}>
               {/* LOGIN FORM */}
 
               <div className="form-group">
                 <label>Email</label>
                 <div className="input-box">
                   <Mail size={18} />
-                  <input type="email" placeholder="you@example.com" />
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -89,7 +103,12 @@ const Login = () => {
                 <label>Password</label>
                 <div className="input-box">
                   <Lock size={18} />
-                  <input type="password" placeholder="••••••••" />
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -103,8 +122,8 @@ const Login = () => {
                 </button>
               </div>
 
-              <button className="login-btn">Sign In →</button>
-            </>
+              <button type="submit" className="login-btn">Sign In →</button>
+            </form>
           ) : (
             <>
               {/* RESET PASSWORD FORM */}
