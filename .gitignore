@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+FrontEnd/frontend-auth/node_modules/
+frontend-auth/node_modules/
+
+# Build files
+dist/
+.vite/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
