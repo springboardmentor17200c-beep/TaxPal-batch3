@@ -5,7 +5,10 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   country: String,
-  income_bracket: String
+  income_bracket: String,
+  resetToken: String,
+  resetTokenExpiry: Date,
+  createdAt: { type: Date, default: Date.now }
 });
 
 export default mongoose.model("User", userSchema);

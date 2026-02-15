@@ -2,22 +2,144 @@ import { Mail, Lock, BarChart3 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../styles/login.css";
 import { useState } from "react";
+import { authAPI } from "../../services/api";
+import { useUser } from "../../context/UserContext";
 
 
 const Login = () => {
   const [isResetMode, setIsResetMode] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1: Email, 2: Code, 3: Password
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useUser();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Logging in with", email, password);
-    // TODO: Integrate with actual backend
-    if (email && password) {
+    setError("");
+    setLoading(true);
+
+    try {
+      if (!email || !password) {
+        setError("Please enter email and password");
+        setLoading(false);
+        return;
+      }
+
+      const result = await authAPI.login(email, password);
+      setIsAuthenticated(true);
       navigate("/dashboard");
-    } else {
-      alert("Please enter email and password");
+    } catch (err) {
+      setError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequestReset = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      if (!resetEmail) {
+        setError("Please enter your email");
+        setLoading(false);
+        return;
+      }
+
+      const result = await authAPI.requestPasswordReset(resetEmail);
+      setSuccess(result.message || "Reset code sent to your email");
+      // For development testing, show the code
+      if (result.resetCode) {
+        console.log(`Reset Code (for testing): ${result.resetCode}`);
+      }
+      setResetStep(2); // Move to code verification step
+    } catch (err) {
+      setError(err.message || "Failed to request reset");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      if (!resetCode) {
+        setError("Please enter the reset code");
+        setLoading(false);
+        return;
+      }
+
+      const result = await authAPI.verifyResetCode(resetEmail, resetCode);
+      setSuccess("Code verified successfully");
+      setResetStep(3); // Move to password reset step
+    } catch (err) {
+      setError(err.message || "Invalid or expired reset code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      if (!newPassword || !confirmPassword) {
+        setError("Please enter both passwords");
+        setLoading(false);
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        setError("Passwords do not match");
+        setLoading(false);
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        setError("Password must be at least 6 characters");
+        setLoading(false);
+        return;
+      }
+
+      const result = await authAPI.resetPassword(
+        resetEmail,
+        resetCode,
+        newPassword,
+        confirmPassword
+      );
+
+      setSuccess("Password reset successfully! Redirecting to login...");
+      setTimeout(() => {
+        setIsResetMode(false);
+        setResetStep(1);
+        setResetEmail("");
+        setResetCode("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setError("");
+        setSuccess("");
+      }, 2000);
+    } catch (err) {
+      setError(err.message || "Failed to reset password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,6 +207,7 @@ const Login = () => {
           {!isResetMode ? (
             <form onSubmit={handleLogin}>
               {/* LOGIN FORM */}
+              {error && <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem' }}>{error}</div>}
 
               <div className="form-group">
                 <label>Email</label>
@@ -95,6 +218,7 @@ const Login = () => {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -108,6 +232,7 @@ const Login = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -117,48 +242,128 @@ const Login = () => {
                   type="button"
                   className="forgot-link"
                   onClick={() => setIsResetMode(true)}
+                  disabled={loading}
                 >
                   Forgot Password?
                 </button>
               </div>
 
-              <button type="submit" className="login-btn">Sign In →</button>
+              <button type="submit" className="login-btn" disabled={loading}>
+                {loading ? "Signing in..." : "Sign In →"}
+              </button>
             </form>
           ) : (
             <>
-              {/* RESET PASSWORD FORM */}
+              {/* PASSWORD RESET FORM */}
+              {error && <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem' }}>{error}</div>}
+              {success && <div style={{ color: '#059669', marginBottom: '1rem', padding: '0.75rem', background: '#dcfce7', borderRadius: '0.5rem' }}>{success}</div>}
 
-              <div className="form-group">
-                <label>Email</label>
-                <div className="input-box">
-                  <Mail size={18} />
-                  <input type="email" placeholder="you@example.com" />
-                </div>
-              </div>
+              {/* STEP 1: Enter Email */}
+              {resetStep === 1 && (
+                <form onSubmit={handleRequestReset}>
+                  <div className="form-group">
+                    <label>Email Address</label>
+                    <div className="input-box">
+                      <Mail size={18} />
+                      <input
+                        type="email"
+                        placeholder="you@example.com"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              <div className="form-group">
-                <label>New Password</label>
-                <div className="input-box">
-                  <Lock size={18} />
-                  <input type="password" placeholder="Enter new password" />
-                </div>
-              </div>
+                  <button className="login-btn" type="submit" disabled={loading}>
+                    {loading ? "Sending..." : "Send Reset Code →"}
+                  </button>
+                </form>
+              )}
 
-              <div className="form-group">
-                <label>Re-enter Password</label>
-                <div className="input-box">
-                  <Lock size={18} />
-                  <input type="password" placeholder="Confirm password" />
-                </div>
-              </div>
+              {/* STEP 2: Verify Code */}
+              {resetStep === 2 && (
+                <form onSubmit={handleVerifyCode}>
+                  <div className="form-group">
+                    <label>Reset Code</label>
+                    <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                      Check your email for the 6-digit reset code
+                    </p>
+                    <div className="input-box">
+                      <Lock size={18} />
+                      <input
+                        type="text"
+                        placeholder="Enter reset code"
+                        value={resetCode}
+                        onChange={(e) => setResetCode(e.target.value.toUpperCase())}
+                        disabled={loading}
+                        required
+                        maxLength="6"
+                      />
+                    </div>
+                  </div>
 
-              <button className="login-btn">Reset Password →</button>
+                  <button className="login-btn" type="submit" disabled={loading}>
+                    {loading ? "Verifying..." : "Verify Code →"}
+                  </button>
+                </form>
+              )}
+
+              {/* STEP 3: Reset Password */}
+              {resetStep === 3 && (
+                <form onSubmit={handleResetPassword}>
+                  <div className="form-group">
+                    <label>New Password</label>
+                    <div className="input-box">
+                      <Lock size={18} />
+                      <input
+                        type="password"
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Confirm Password</label>
+                    <div className="input-box">
+                      <Lock size={18} />
+                      <input
+                        type="password"
+                        placeholder="Confirm password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button className="login-btn" type="submit" disabled={loading}>
+                    {loading ? "Resetting..." : "Reset Password →"}
+                  </button>
+                </form>
+              )}
 
               <div className="back-to-login">
                 <button
                   type="button"
                   className="forgot-link"
-                  onClick={() => setIsResetMode(false)}
+                  onClick={() => {
+                    setIsResetMode(false);
+                    setResetStep(1);
+                    setResetEmail("");
+                    setResetCode("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setError("");
+                    setSuccess("");
+                  }}
+                  disabled={loading}
                 >
                   Back to Login
                 </button>
