@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, TrendingDown, PieChart, Settings, LogOut } from "lucide-react";
-import "../../styles/dashboard.css";
+import "../styles/dashboard.css";
 
 const Sidebar = () => {
     const location = useLocation();
