@@ -5,17 +5,11 @@ import IncomeInputForm from "../../components/IncomeInputForm";
 
 const Income = () => {
     const { addTransaction } = useTransactions();
-    const [amount, setAmount] = useState("");
-    const [source, setSource] = useState("");
-    const [date, setDate] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        addTransaction({ type: "income", amount, source, date });
-        alert("Income Added Successfully!");
-        setAmount("");
-        setSource("");
-        setDate("");
+    const handleSave = (transactionData) => {
+        addTransaction({ ...transactionData, type: "income" });
+        setIsModalOpen(false);
     };
 
     return (
@@ -27,39 +21,9 @@ const Income = () => {
                 </button>
             </div>
 
-            <div className="card">
-                <form onSubmit={handleSubmit} className="transaction-form">
-                    <div className="form-group">
-                        <label>Amount</label>
-                        <input
-                            type="number"
-                            placeholder="0.00"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Source</label>
-                        <input
-                            type="text"
-                            placeholder="e.g. Client Payment"
-                            value={source}
-                            onChange={(e) => setSource(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Date</label>
-                        <input
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="primary-btn">Add Income</button>
-                </form>
+            {/* Transaction List would go here */}
+            <div className="card empty-state">
+                <p>No income transactions recorded yet.</p>
             </div>
 
             <IncomeInputForm
