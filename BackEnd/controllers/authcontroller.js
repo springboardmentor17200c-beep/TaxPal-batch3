@@ -11,7 +11,11 @@ export const registerUser = async (req, res) => {
     const user = await userDB.create(req.body);
     res.json({ message: "User Registered", user });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    if (err.code === 11000) {
+      res.status(400).json({ error: "Email already registered. Please login." });
+    } else {
+      res.status(400).json({ error: err.message });
+    }
   }
 };
 
