@@ -4,6 +4,7 @@ import CustomDropdown from "../../components/ui/CustomDropdown";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { authAPI } from "../../services/api";
 
 
 const Signup = () => {
@@ -12,22 +13,39 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [country, setCountry] = useState("");
   const [incomeBracket, setIncomeBracket] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { updateUser } = useUser();
+  const { updateUser, setIsAuthenticated } = useUser();
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    console.log("Signing up with", { fullName, email, password, country, incomeBracket });
+    setError("");
+    setLoading(true);
 
-    let currency = "$";
-    if (country === "India") currency = "₹";
-    else if (country === "UK") currency = "£";
+    try {
+      if (!fullName || !email || !password || !country) {
+        setError("Please fill in all required fields");
+        setLoading(false);
+        return;
+      }
 
-    if (fullName && email && password) {
-      updateUser({ name: fullName, email, country, currency });
+      let currency = "$";
+      if (country === "India") currency = "₹";
+      else if (country === "UK") currency = "£";
+
+      // Register user with backend
+      const result = await authAPI.register(fullName, email, password);
+      
+      // Update user context with additional info
+      updateUser({ name: fullName, email, country, currency, incomeBracket });
+      setIsAuthenticated(true);
+      
       navigate("/dashboard");
-    } else {
-      alert("Please fill in all required fields");
+    } catch (err) {
+      setError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,6 +107,8 @@ const Signup = () => {
         <div className="glass-card">
 
           <form onSubmit={handleSignup}>
+            {error && <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem' }}>{error}</div>}
+            
             <div className="form-group">
               <label>Full Name</label>
               <div className="input-box">
@@ -98,6 +118,7 @@ const Signup = () => {
                   placeholder="Alex Morgan"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -111,6 +132,7 @@ const Signup = () => {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -124,6 +146,7 @@ const Signup = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -150,8 +173,8 @@ const Signup = () => {
             </div>
 
 
-            <button type="submit" className="create-btn">
-              Create Account →
+            <button type="submit" className="create-btn" disabled={loading}>
+              {loading ? "Creating Account..." : "Create Account →"}
             </button>
           </form>
 
