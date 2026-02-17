@@ -1,16 +1,21 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, TrendingUp, TrendingDown, PieChart, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, PieChart, Settings, LogOut, FileText, DollarSign } from "lucide-react";
 import "../styles/dashboard.css";
+import { useUser } from "../context/UserContext";
 
 const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user } = useUser(); // Assuming useUser provides user details
 
+    // Updated menu items based on user request
     const menuItems = [
         { path: "/dashboard", name: "Dashboard", icon: <LayoutDashboard size={20} /> },
-        { path: "/income", name: "Income", icon: <TrendingUp size={20} /> },
-        { path: "/expenses", name: "Expenses", icon: <TrendingDown size={20} /> },
+        { path: "/transactions", name: "Transactions", icon: <TrendingUp size={20} /> }, // Using TrendingUp as placeholder for Transactions
+        { path: "/budgets", name: "Budgets", icon: <PieChart size={20} /> },
+        { path: "/tax-estimation", name: "TAX Estimatione", icon: <DollarSign size={20} /> },
+        { path: "/report", name: "Report", icon: <FileText size={20} /> },
     ];
 
     const handleLogout = () => {
@@ -21,7 +26,7 @@ const Sidebar = () => {
     return (
         <div className="sidebar">
             <div className="sidebar-logo">
-                <div className="logo-icon">T</div>
+                {/* <div className="logo-icon">T</div>  Removing old logo icon if not in design, keeping simplistic */}
                 <h2>TaxPal</h2>
             </div>
 
@@ -39,10 +44,25 @@ const Sidebar = () => {
             </nav>
 
             <div className="sidebar-footer">
-                <button className="logout-btn" onClick={handleLogout}>
-                    <LogOut size={20} />
-                    <span>Logout</span>
-                </button>
+                <div className="user-profile-sidebar">
+                    <div className="avatar-circle">
+                        {user?.name ? user.name.charAt(0).toUpperCase() : "B"}
+                    </div>
+                    <div className="user-info">
+                        <span className="user-name">{user?.name || "BBBBBB"}</span>
+                        <span className="user-email">{user?.email || "Abcd@gmail.com"}</span>
+                    </div>
+                </div>
+                <div className="sidebar-actions">
+                    <button className="settings-btn" onClick={() => navigate('/settings')}>
+                        <Settings size={20} />
+                        <span>Settings</span>
+                    </button>
+                    <button className="logout-btn" onClick={handleLogout}>
+                        <LogOut size={20} />
+                        <span>LogOut</span>
+                    </button>
+                </div>
             </div>
         </div>
     );

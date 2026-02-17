@@ -1,5 +1,6 @@
 import React from "react";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, PlusCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useTransactions } from "../../context/TransactionContext";
 import { useUser } from "../../context/UserContext";
 import "../../styles/dashboard.css";
@@ -8,40 +9,53 @@ const Dashboard = () => {
     const { transactions } = useTransactions();
     const { user } = useUser();
     const { currency } = user;
+    const navigate = useNavigate(); // For button navigation
 
     const totalIncome = transactions.filter(t => t.type === "income").reduce((acc, curr) => parseFloat(acc) + parseFloat(curr.amount), 0);
     const totalExpense = transactions.filter(t => t.type === "expense").reduce((acc, curr) => parseFloat(acc) + parseFloat(curr.amount), 0);
-    const balance = totalIncome - totalExpense;
+    const taxEstimated = 0; // Placeholder as per image showing 00
 
     return (
         <div className="dashboard-container">
             <div className="dashboard-cards">
-                <div className="card">
-                    <h3>Total Income</h3>
-                    <div className="amount">{currency}{totalIncome.toFixed(2)}</div>
-                    <div className="trend up">
-                        <TrendingUp size={16} /> +12% this month
+                <div className="card income-card">
+                    <div className="card-header">
+                        <h3>Monthly Income</h3>
+                        <div className="trend-icon-up"><TrendingUp size={16} /></div>
+                    </div>
+                    <div className="amount">{currency}{totalIncome.toFixed(0)}</div>
+                    <div className="trend-text positive">
+                        <TrendingUp size={14} /> 12% More than last month
                     </div>
                 </div>
 
-                <div className="card">
-                    <h3>Total Expenses</h3>
-                    <div className="amount">{currency}{totalExpense.toFixed(2)}</div>
-                    <div className="trend down">
-                        <TrendingDown size={16} /> -5% this month
+                <div className="card expense-card">
+                    <div className="card-header">
+                        <h3>Monthly Expenses</h3>
+                        <div className="trend-icon-up"><TrendingUp size={16} /></div>
+                    </div>
+                    <div className="amount">{currency}{totalExpense.toFixed(0)}</div>
+                    <div className="trend-text positive">
+                        <TrendingUp size={14} /> 5% More than last month
                     </div>
                 </div>
 
-                <div className="card">
-                    <h3>Current Balance</h3>
-                    <div className="amount" style={{ color: balance >= 0 ? '#10b981' : '#ef4444' }}>{currency}{balance.toFixed(2)}</div>
-                    <div className="trend up">
-                        <DollarSign size={16} /> Healthy
-                    </div>
+                <div className="card tax-card">
+                    <h3>Tax Estimated</h3>
+                    <div className="amount">{currency}{taxEstimated.toFixed(2)}</div>
                 </div>
             </div>
 
-            <div className="card">
+            <div className="dashboard-actions">
+                <button className="action-btn" onClick={() => navigate('/income')}>
+                    <PlusCircle size={18} /> Add Income
+                </button>
+                <button className="action-btn" onClick={() => navigate('/expenses')}>
+                    <PlusCircle size={18} /> Add Expenses
+                </button>
+            </div>
+
+            <div className="card card-list">
                 <h3>Recent Transactions</h3>
                 <div style={{ marginTop: '1rem' }}>
                     {transactions.length === 0 ? (
