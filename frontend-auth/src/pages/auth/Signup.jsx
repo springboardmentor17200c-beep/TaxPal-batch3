@@ -52,48 +52,6 @@ const Signup = () => {
   return (
     <div className="signup-container">
 
-      {/* LEFT SIDE */}
-      <div className="signup-left">
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="icon"><PieChart size={22} /></div>
-            <div>
-              <h4>Expense Tracking</h4>
-              <p>Categorize automatically</p>
-            </div>
-          </div>
-
-          <div className="feature-card">
-            <div className="icon"><LucideFolderLock size={22} /></div>
-            <div>
-              <h4>Tax Estimation</h4>
-              <p>Quarterly calculations</p>
-            </div>
-          </div>
-
-          <div className="feature-card">
-            <div className="icon"><Shield size={22} /></div>
-            <div>
-              <h4>Secure Data</h4>
-              <p>End-to-end encrypted</p>
-            </div>
-          </div>
-
-          <div className="feature-card">
-            <div className="icon"><User size={22} /></div>
-            <div>
-              <h4>Multi-Currency</h4>
-              <p>Global freelancing</p>
-            </div>
-          </div>
-
-        </div>
-
-        <h2 className="journey-title">Start your financial journey</h2>
-        <p className="journey-desc">
-          Join thousands of freelancers who trust TaxPal for their financial management.
-        </p>
-      </div>
 
       {/* RIGHT SIDE */}
       <div className="signup-right">
@@ -152,9 +110,9 @@ const Signup = () => {
             </div>
 
             <div className="form-group">
-              <label>Country</label>
+              <label style={{ color: '#000000' }}>Country</label>
               <CustomDropdown
-                placeholder="Select country"
+                placeholder="Select country" style={{ color: '#000000' }}
                 options={["India", "USA", "UK"]}
                 icon={<Globe size={18} />}
                 onSelect={setCountry}

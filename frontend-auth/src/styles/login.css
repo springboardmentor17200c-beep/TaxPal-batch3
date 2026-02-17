@@ -1,23 +1,19 @@
 .login-container {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a, #1e293b, #312e81);
+  background: linear-gradient(#ffffff);
   color: white;
   font-family: 'Poppins', sans-serif;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
 }
 
-/* LEFT SIDE */
-.login-left {
-  flex: 1;
-  padding: 100px 80px;
-  display: flex;
-  flex-direction: column;
 
-  animation: slideInLeft 0.9s ease forwards;
-}
 
 .overview-card {
   background: rgba(255,255,255,0.06);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 22px;
@@ -118,10 +114,55 @@
   font-size: 32px;
   font-weight: 600;
   margin-bottom: 20px;
-  background: linear-gradient(to right, #38bdf8, #60a5fa);
+  background: linear-gradient(to right, #feffff, #fefeff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Styles used by Login.jsx markup */
+.login-box {
+  width: 440px;
+  padding: 36px 32px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e6e7eb;
+  box-shadow: 0 6px 24px rgba(15,23,42,0.08);
+  animation: slideUp 0.6s ease forwards;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.logo-section h1 {
+  font-size: 22px;
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.error-message,
+.success-message {
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.error-message,
+.success-message {
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.error-message { background: #fff5f5; color: #991b1b; border: 1px solid #fecaca; }
+.success-message { background: #f6ffed; color: #166534; border: 1px solid #bbf7d0; }
 
 .login-desc {
   font-size: 16px;
@@ -170,6 +211,7 @@
   padding: 40px;
   border-radius: 22px;
   background: rgba(255,255,255,0.06);
+  -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
   border: 1px solid rgba(255,255,255,0.14);
    animation: slideUp 1s ease forwards;
@@ -195,10 +237,9 @@
   gap: 12px;
   height: 50px;
   padding: 0 16px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.15);
-  transition: 0.3s ease;
+  background: #ffffff;
+  border: 1px solid #e6e7eb;
+  border-radius: 10px;
 }
 
 .input-box input {
@@ -206,8 +247,34 @@
   background: transparent;
   border: none;
   outline: none;
-  color: white;
+  color: #0f172a;
   font-size: 14px;
+}
+
+
+.input-box svg {
+  color: #6b7280;
+}
+.input-box input::placeholder {
+  color: #94a3b8;
+}
+.form-group label {
+  color: #0f172a;
+}
+.signup-link, .back-to-login, .forgot-link, .signup-text {
+  color: #2563eb;
+}
+
+.input-box select {
+  background-color: transparent;
+  color: #0f172a;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.input-box select option[disabled] {
+  color: #94a3b8;
 }
 
 .input-box:focus-within {
