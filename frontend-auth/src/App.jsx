@@ -10,6 +10,11 @@ import Expenses from "./pages/transactions/Expenses";
 import { TransactionProvider } from "./context/TransactionContext";
 import { UserProvider } from "./context/UserContext";
 
+import Transactions from "./pages/dashboard/Transactions";
+import Budgets from "./pages/dashboard/Budgets";
+import TaxEstimation from "./pages/dashboard/TaxEstimation";
+import Report from "./pages/dashboard/Report";
+
 function App() {
   return (
     <UserProvider>
@@ -23,6 +28,10 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/income" element={<Income />} />
               <Route path="/expenses" element={<Expenses />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/budgets" element={<Budgets />} />
+              <Route path="/tax-estimation" element={<TaxEstimation />} />
+              <Route path="/report" element={<Report />} />
             </Route>
           </Routes>
         </BrowserRouter>
