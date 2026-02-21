@@ -53,16 +53,4 @@ You should see a local URL, e.g. **http://localhost:5173**
 ### Step 3: Use the app
 
 1. In your browser, go to **http://localhost:5173** (or the URL Vite shows).
-2. Log in with: **demo@taxpal.demo** / **password**
 3. Use Dashboard, Transactions, Budgets, Tax Estimator, and Reports.
-
----
-
-## Quick reference
-
-|          | Command        | URL                    |
-|----------|----------------|------------------------|
-| Backend  | `cd backend && npm run dev`  | http://localhost:4000   |
-| Frontend | `cd frontend && npm run dev` | http://localhost:5173  |
-| API health | —                          | http://localhost:4000/api/health |
-| Demo login | —                          | demo@taxpal.demo / password     |

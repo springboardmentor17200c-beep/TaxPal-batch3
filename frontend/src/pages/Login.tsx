@@ -70,10 +70,6 @@ const Login = () => {
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            Demo: <span className="font-semibold text-card-foreground">demo@taxpal.demo</span> / <span className="font-semibold text-card-foreground">password</span>
-          </div>
-
           <div className="mt-3 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link to="/signup" className="font-medium text-primary hover:underline">
