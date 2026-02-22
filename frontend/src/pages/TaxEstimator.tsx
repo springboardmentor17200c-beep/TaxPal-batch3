@@ -118,7 +118,6 @@ export default function TaxEstimator() {
             <p className="text-sm text-muted-foreground mt-1">Calculate your estimated tax obligations</p>
           </div>
 
-          {/* Tabs */}
           <div className="flex gap-1 mb-6 border-b">
             {[
               { id: "calculator", label: "Calculator", icon: Calculator },
@@ -141,7 +140,6 @@ export default function TaxEstimator() {
 
           {activeTab === "calculator" && (
             <div className="grid grid-cols-3 gap-6">
-              {/* Form */}
               <div className="col-span-2 rounded-xl border bg-card p-6 space-y-5">
                 <h2 className="font-semibold text-foreground">Quarterly Tax Calculator</h2>
 
@@ -212,7 +210,6 @@ export default function TaxEstimator() {
                 </div>
               </div>
 
-              {/* Summary */}
               <div className="rounded-xl border bg-card p-6">
                 <h2 className="font-semibold text-foreground mb-4">Tax Summary</h2>
                 {!summary ? (

@@ -1,7 +1,3 @@
-/**
- * Quick verify: MongoDB connection and API health.
- * Run: node scripts/verify.js
- */
 import "dotenv/config";
 import mongoose from "mongoose";
 

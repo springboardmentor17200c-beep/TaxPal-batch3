@@ -60,7 +60,6 @@ export default function Reports() {
             <p className="text-sm text-muted-foreground mt-1">Generate and download your financial reports</p>
           </div>
 
-          {/* Generate Report Form */}
           <div className="rounded-xl border bg-card p-6 mb-6">
             <h2 className="font-semibold text-foreground mb-4">Generate Report</h2>
             <div className="grid grid-cols-3 gap-4 mb-4">

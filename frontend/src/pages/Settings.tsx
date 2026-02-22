@@ -102,10 +102,8 @@ export default function Settings() {
               </div>
             </nav>
 
-            {/* Content */}
             <div className="flex-1 rounded-xl border bg-card p-6">
 
-              {/* Profile */}
               {activeTab === "profile" && (
                 <div className="space-y-5">
                   <h2 className="font-semibold text-foreground">Profile Information</h2>
@@ -135,7 +133,6 @@ export default function Settings() {
                 </div>
               )}
 
-              {/* Categories */}
               {activeTab === "categories" && (
                 <div>
                   <h2 className="font-semibold text-foreground mb-4">Category Management</h2>
@@ -171,7 +168,6 @@ export default function Settings() {
                     ))}
                   </div>
 
-                  {/* Add new category */}
                   <div className="border-t pt-4">
                     <div className="flex gap-3 items-end">
                       <div className="space-y-1.5 flex-1">
@@ -204,7 +200,6 @@ export default function Settings() {
                 </div>
               )}
 
-              {/* Notifications */}
               {activeTab === "notifications" && (
                 <div className="space-y-5">
                   <h2 className="font-semibold text-foreground">Notification Preferences</h2>
@@ -234,7 +229,6 @@ export default function Settings() {
                 </div>
               )}
 
-              {/* Security */}
               {activeTab === "security" && (
                 <div className="space-y-5">
                   <h2 className="font-semibold text-foreground">Security Settings</h2>
