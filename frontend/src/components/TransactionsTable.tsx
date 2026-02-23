@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-
+import { formatCurrency } from "@/utils/formatCurrency";
+import { useAuth } from "@/contexts/AuthContext";
 type Tx = { _id: string; date: string; description?: string; category: string; amount: number; type: string };
 
 const TransactionsTable = ({ transactions = [] }: { transactions?: Tx[] }) => {
+  const { user } = useAuth();
   const recent = transactions.slice(0, 5);
   return (
     <div className="rounded-xl border bg-card p-5">
@@ -32,8 +34,13 @@ const TransactionsTable = ({ transactions = [] }: { transactions?: Tx[] }) => {
                   <td className="py-3 text-muted-foreground">{format(new Date(t.date), "MMM d, yyyy")}</td>
                   <td className="py-3 text-card-foreground">{t.description || t.category}</td>
                   <td className="py-3 text-muted-foreground">{t.category}</td>
-                  <td className={`py-3 font-medium ${t.type === "income" ? "text-success" : "text-destructive"}`}>
-                    {t.type === "income" ? "+" : "-"}${Math.abs(t.amount).toLocaleString()}
+                  <td
+                    className={`py-3 font-medium ${
+                      t.type === "income" ? "text-success" : "text-destructive"
+                    }`}
+                  >
+                    {t.type === "income" ? "+" : "-"}
+                    {formatCurrency(Math.abs(Number(t.amount) || 0), user?.country)}
                   </td>
                   <td className="py-3">
                     <Badge variant={t.type === "income" ? "default" : "destructive"} className="text-xs">

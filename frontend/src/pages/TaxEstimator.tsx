@@ -4,6 +4,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatCurrency, getCurrencySymbol } from "@/utils/formatCurrency";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Select,
   SelectContent,
@@ -54,6 +56,8 @@ interface TaxSummary {
 }
 
 export default function TaxEstimator() {
+  const { user } = useAuth();
+  const symbol = getCurrencySymbol(user?.country);
   const [activeTab, setActiveTab] = useState<"calculator" | "calendar">("calculator");
   const [form, setForm] = useState({
     country: "United States",
@@ -101,8 +105,8 @@ export default function TaxEstimator() {
     });
   };
 
-  const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
+  // const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmt = (n: number) => formatCurrency(n, user?.country);
   const badgeClass: Record<string, string> = {
     reminder: "bg-primary/10 text-primary",
     payment: "bg-warning/10 text-warning",
@@ -179,7 +183,10 @@ export default function TaxEstimator() {
                   <div className="space-y-1.5">
                     <Label>Gross Income for Quarter</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                      {/* <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span> */}
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                        {symbol}
+                      </span>
                       <Input type="number" placeholder="0.00" className="pl-7" value={form.grossIncome} onChange={(e) => set("grossIncome", e.target.value)} />
                     </div>
                   </div>
@@ -197,7 +204,10 @@ export default function TaxEstimator() {
                       <div key={f.key} className="space-y-1.5">
                         <Label>{f.label}</Label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                          {/* <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span> */}
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                            {symbol}
+                          </span>
                           <Input type="number" placeholder="0.00" className="pl-7" value={(form as any)[f.key]} onChange={(e) => set(f.key, e.target.value)} />
                         </div>
                       </div>

@@ -52,10 +52,34 @@ const Dashboard = () => {
 
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard title="Monthly Income" value={`$${(summary?.income ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} subtitle="From transactions" type="up" />
-              <StatCard title="Monthly Expenses" value={`$${(summary?.expense ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} subtitle="From transactions" type="down" />
-              <StatCard title="Estimated Tax Due" value="$0.00" subtitle="No upcoming taxes" type="warning" />
-              <StatCard title="Net" value={`$${(summary?.net ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} subtitle={summary && summary.net >= 0 ? "Positive cash flow" : "Negative cash flow"} type="target" />
+              {/* <StatCard title="Monthly Income" value={`$${(summary?.income ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} subtitle="From transactions" type="up" /> */}
+              <StatCard
+                title="Monthly Income"
+                value={Number(summary?.income) || 0}
+                subtitle="From transactions"
+                type="up"
+              />
+
+              <StatCard
+                title="Monthly Expenses"
+                value={Number(summary?.expense) || 0}
+                subtitle="From transactions"
+                type="down"
+              />
+
+              <StatCard
+                title="Estimated Tax Due"
+                value={0}
+                subtitle="No upcoming taxes"
+                type="warning"
+              />
+
+              <StatCard
+                title="Net"
+                value={Number(summary?.net) || 0}
+                subtitle={summary && summary.net >= 0 ? "Positive cash flow" : "Negative cash flow"}
+                type="target"
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

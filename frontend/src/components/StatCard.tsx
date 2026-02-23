@@ -1,8 +1,10 @@
 import { ArrowUp, ArrowDown, AlertCircle, Target } from "lucide-react";
+import { formatCurrency } from "@/utils/formatCurrency";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StatCardProps {
   title: string;
-  value: string;
+  value: number;
   subtitle: string;
   type: "up" | "down" | "warning" | "target";
 }
@@ -22,12 +24,15 @@ const subtitleColor = {
 };
 
 const StatCard = ({ title, value, subtitle, type }: StatCardProps) => {
+  const { user } = useAuth();
   return (
     <div className="rounded-xl border bg-card p-5">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-card-foreground">{value}</p>
+          <p className="mt-1 text-2xl font-bold text-card-foreground">
+            {formatCurrency(value, user?.country)}
+          </p>
           <p className={`mt-1 text-xs ${subtitleColor[type]}`}>{subtitle}</p>
         </div>
         {iconMap[type]}

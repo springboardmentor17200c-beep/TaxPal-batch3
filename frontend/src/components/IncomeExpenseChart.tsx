@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subMonths } from "date-fns";
-
+import { formatCurrency, getCurrencySymbol } from "@/utils/formatCurrency";
+import { useAuth } from "@/contexts/AuthContext";
 const defaultData = [
   { month: "Jan", Income: 7800, Expenses: 2800 },
   { month: "Feb", Income: 6500, Expenses: 3200 },
@@ -14,6 +15,8 @@ const defaultData = [
 type Tx = { date: string; type: string; amount: number };
 
 const IncomeExpenseChart = ({ transactions = [] }: { transactions?: Tx[] }) => {
+  const { user } = useAuth();
+  const symbol = getCurrencySymbol(user?.country);
   const [period, setPeriod] = useState<"Year" | "Quarter" | "Month">("Year");
   const data = useMemo(() => {
     if (!transactions.length) return defaultData;
@@ -58,14 +61,26 @@ const IncomeExpenseChart = ({ transactions = [] }: { transactions?: Tx[] }) => {
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
           <XAxis dataKey="month" axisLine={false} tickLine={false} className="text-xs" />
-          <YAxis axisLine={false} tickLine={false} className="text-xs" tickFormatter={(v) => `$${v / 1000}k`} />
+          {/* <YAxis axisLine={false} tickLine={false} className="text-xs" tickFormatter={(v) => `$${v / 1000}k`} /> */}
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            className="text-xs"
+            tickFormatter={(v) => {
+              if (v >= 1000) return `${symbol}${v / 1000}k`;
+              return `${symbol}${v}`;
+            }}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: "hsl(var(--card))",
               border: "1px solid hsl(var(--border))",
               borderRadius: "8px",
             }}
-            formatter={(value: number) => [`$${value.toLocaleString()}`, undefined]}
+            formatter={(value: number) => [
+              formatCurrency(value, user?.country),
+              undefined,
+            ]}
           />
           <Legend />
           <Bar dataKey="Income" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />

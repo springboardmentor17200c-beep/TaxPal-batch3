@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency, getCurrencySymbol } from "@/utils/formatCurrency";
+import { useAuth } from "@/contexts/AuthContext";
+
 import {
   Select,
   SelectContent,
@@ -38,6 +41,8 @@ function getStatus(budget: number, spent: number) {
 }
 
 export default function Budgets() {
+  const { user } = useAuth();
+  const symbol = getCurrencySymbol(user?.country);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     category: "",
@@ -110,10 +115,10 @@ export default function Budgets() {
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
-              { label: "Total Budget", value: `$${totalBudget.toLocaleString()}`, cls: "text-foreground" },
-              { label: "Total Spent", value: `$${totalSpent.toLocaleString()}`, cls: "text-destructive" },
-              { label: "Remaining", value: `$${totalRemaining.toLocaleString()}`, cls: totalRemaining >= 0 ? "text-success" : "text-destructive" },
-            ].map((c) => (
+                { label: "Total Budget", value: formatCurrency(totalBudget, user?.country), cls: "text-foreground" },
+                { label: "Total Spent", value: formatCurrency(totalSpent, user?.country), cls: "text-destructive" },
+                { label: "Remaining", value: formatCurrency(totalRemaining, user?.country), cls: totalRemaining >= 0 ? "text-success" : "text-destructive" },
+              ].map((c) => (
               <div key={c.label} className="rounded-xl border bg-card p-5">
                 <p className="text-sm text-muted-foreground">{c.label}</p>
                 <p className={`text-2xl font-bold mt-1 ${c.cls}`}>{c.value}</p>
@@ -146,7 +151,10 @@ export default function Budgets() {
                 <div className="space-y-1.5">
                   <Label>Budget Amount</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    {/* <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span> */}
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      {symbol}
+                    </span>
                     <Input
                       type="number"
                       placeholder="0.00"
@@ -203,10 +211,11 @@ export default function Budgets() {
                     return (
                       <tr key={b._id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3 font-medium text-foreground">{b.category}</td>
-                        <td className="px-4 py-3 text-muted-foreground">${b.budget.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-muted-foreground">${b.spent.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatCurrency(Number(b.budget) || 0, user?.country)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatCurrency(Number(b.spent) || 0, user?.country)}</td>
                         <td className={`px-4 py-3 font-medium ${remaining < 0 ? "text-destructive" : "text-success"}`}>
-                          {remaining < 0 ? "-" : ""}${Math.abs(remaining).toLocaleString()}
+                          {remaining < 0 ? "-" : ""}
+                          {formatCurrency(Math.abs(Number(remaining) || 0), user?.country)}
                         </td>
                         <td className="px-4 py-3 w-36">
                           <div className="h-2 rounded-full bg-muted overflow-hidden">

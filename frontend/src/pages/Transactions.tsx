@@ -4,6 +4,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/utils/formatCurrency";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Select,
   SelectContent,
@@ -17,6 +19,7 @@ import { transactionsApi } from "@/lib/api";
 import { format } from "date-fns";
 
 export default function Transactions() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -56,9 +59,21 @@ export default function Transactions() {
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
-              { label: "Total Income", value: `$${totalIncome.toLocaleString()}`, cls: "text-success" },
-              { label: "Total Expenses", value: `$${totalExpense.toLocaleString()}`, cls: "text-destructive" },
-              { label: "Net", value: `$${(totalIncome - totalExpense).toLocaleString()}`, cls: totalIncome - totalExpense >= 0 ? "text-success" : "text-destructive" },
+              {
+                label: "Total Income",
+                value: formatCurrency(totalIncome, user?.country),
+                cls: "text-success",
+              },
+              {
+                label: "Total Expenses",
+                value: formatCurrency(totalExpense, user?.country),
+                cls: "text-destructive",
+              },
+              {
+                label: "Net",
+                value: formatCurrency(totalIncome - totalExpense, user?.country),
+                cls: totalIncome - totalExpense >= 0 ? "text-success" : "text-destructive",
+              },
             ].map((c) => (
               <div key={c.label} className="rounded-xl border bg-card p-5">
                 <p className="text-sm text-muted-foreground">{c.label}</p>
@@ -115,7 +130,9 @@ export default function Transactions() {
                         <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">{t.category}</span>
                       </td>
                       <td className={`px-4 py-3 font-semibold ${t.type === "income" ? "text-success" : "text-destructive"}`}>
-                        {t.type === "income" ? "+" : ""}{t.amount < 0 ? `-$${Math.abs(t.amount).toLocaleString()}` : `$${t.amount.toLocaleString()}`}
+                        {/* {t.type === "income" ? "+" : ""}{t.amount < 0 ? `-$${Math.abs(t.amount).toLocaleString()}` : `$${t.amount.toLocaleString()}`} */}
+                        {t.type === "income" ? "+" : ""}
+                        {formatCurrency(Math.abs(Number(t.amount) || 0), user?.country)}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-xs font-medium ${
