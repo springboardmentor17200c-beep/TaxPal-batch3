@@ -50,6 +50,31 @@ export default function Reports() {
     createMutation.mutate({ period, report_type: reportType, format: formatSel });
   };
 
+  const downloadReport = async (id: string) => {
+    try {
+      const token = localStorage.getItem("taxpal_token");
+
+      const res = await fetch(
+        `http://localhost:4000/api/reports/download/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "report.pdf";
+      a.click();
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -131,7 +156,10 @@ export default function Reports() {
                         <span className="px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">{r.format}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <button className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium">
+                        <button
+                          onClick={() => downloadReport(r.id)}
+                          className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium"
+                        >
                           <Download className="h-3.5 w-3.5" /> Download
                         </button>
                       </td>
