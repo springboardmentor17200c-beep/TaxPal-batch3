@@ -53,8 +53,8 @@ export default function Budgets() {
   const queryClient = useQueryClient();
 
   const { data: budgets = [], isLoading } = useQuery({
-    queryKey: ["budgets"],
-    queryFn: () => budgetsApi.list(),
+    queryKey: ["budgets", form.month],
+    queryFn: () => budgetsApi.list(form.month),
   });
 
   const createMutation = useMutation({
@@ -115,10 +115,10 @@ export default function Budgets() {
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
-                { label: "Total Budget", value: formatCurrency(totalBudget, user?.country), cls: "text-foreground" },
-                { label: "Total Spent", value: formatCurrency(totalSpent, user?.country), cls: "text-destructive" },
-                { label: "Remaining", value: formatCurrency(totalRemaining, user?.country), cls: totalRemaining >= 0 ? "text-success" : "text-destructive" },
-              ].map((c) => (
+              { label: "Total Budget", value: formatCurrency(totalBudget, user?.country), cls: "text-foreground" },
+              { label: "Total Spent", value: formatCurrency(totalSpent, user?.country), cls: "text-destructive" },
+              { label: "Remaining", value: formatCurrency(totalRemaining, user?.country), cls: totalRemaining >= 0 ? "text-success" : "text-destructive" },
+            ].map((c) => (
               <div key={c.label} className="rounded-xl border bg-card p-5">
                 <p className="text-sm text-muted-foreground">{c.label}</p>
                 <p className={`text-2xl font-bold mt-1 ${c.cls}`}>{c.value}</p>
@@ -220,7 +220,12 @@ export default function Budgets() {
                         <td className="px-4 py-3 w-36">
                           <div className="h-2 rounded-full bg-muted overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-destructive" : pct >= 85 ? "bg-warning" : "bg-success"}`}
+                              className={`h-full rounded-full transition-all duration-500 ease-in-out ${pct >= 100
+                                  ? "bg-red-600"
+                                  : pct >= 85
+                                    ? "bg-yellow-500"
+                                    : "bg-green-500"
+                                }`}
                               style={{ width: `${pct}%` }}
                             />
                           </div>

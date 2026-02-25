@@ -40,20 +40,25 @@ const RecordTransactionDialog = ({ open, onOpenChange, type = "expense" }: Recor
   const [notes, setNotes] = useState("");
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (body: { type: string; category: string; amount: number; date: string; description?: string }) =>
-      transactionsApi.create(body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
-      onOpenChange(false);
-      setDescription("");
-      setAmount("");
-      setCategory("");
-      setNotes("");
-      toast.success("Transaction added");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to add transaction"),
-  });
+  mutationFn: (body: { type: string; category: string; amount: number; date: string; description?: string }) =>
+    transactionsApi.create(body),
+
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
+
+    queryClient.invalidateQueries({ queryKey: ["budgets"] });
+
+    onOpenChange(false);
+    setDescription("");
+    setAmount("");
+    setCategory("");
+    setNotes("");
+    toast.success("Transaction added");
+  },
+
+  onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to add transaction"),
+});
 
   const isIncome = type === "income";
 
