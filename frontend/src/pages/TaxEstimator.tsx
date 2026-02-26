@@ -105,7 +105,7 @@ export default function TaxEstimator() {
     });
   };
 
-  // const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const fmt = (n: number) => formatCurrency(n, user?.country);
   const badgeClass: Record<string, string> = {
     reminder: "bg-primary/10 text-primary",
@@ -183,7 +183,7 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
                   <div className="space-y-1.5">
                     <Label>Gross Income for Quarter</Label>
                     <div className="relative">
-                      {/* <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span> */}
+                    
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                         {symbol}
                       </span>

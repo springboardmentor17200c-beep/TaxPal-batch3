@@ -22,7 +22,7 @@ import { toast } from "sonner";
 
 const CATEGORIES = [
   "Rent/Mortgage",
-  "Business Expenses",
+  "Business",
   "Utilities",
   "Food & Groceries",
   "Transportation",
