@@ -15,8 +15,24 @@ import {
 } from "@/components/ui/select";
 import { Calculator, CalendarDays } from "lucide-react";
 
-const COUNTRIES = ["United States", "Canada", "United Kingdom", "Australia", "Germany"];
-const US_STATES = ["California", "New York", "Texas", "Florida", "Illinois", "Washington", "Other"];
+const COUNTRIES = ["United States", "Canada", "United Kingdom", "Australia", "Germany", "India"];
+const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+  "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+  "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+  "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
+  "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah",
+  "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming", "Other"
+];
+const INDIA_STATES = [
+  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
+  "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa",
+  "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
+  "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+  "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Other"
+];
 const FILING_STATUS = ["Single", "Married Filing Jointly", "Married Filing Separately", "Head of Household"];
 const QUARTERS = ["Q1 (Jan-Mar 2025)", "Q2 (Apr-Jun 2025)", "Q3 (Jul-Sep 2025)", "Q4 (Oct-Dec 2025)"];
 
@@ -57,7 +73,6 @@ interface TaxSummary {
 
 export default function TaxEstimator() {
   const { user } = useAuth();
-  const symbol = getCurrencySymbol(user?.country);
   const [activeTab, setActiveTab] = useState<"calculator" | "calendar">("calculator");
   const [form, setForm] = useState({
     country: "United States",
@@ -71,6 +86,10 @@ export default function TaxEstimator() {
     homeOffice: "",
   });
   const [summary, setSummary] = useState<TaxSummary | null>(null);
+
+  const symbol = getCurrencySymbol(form.country);
+
+  const statesList = form.country === "India" ? INDIA_STATES : US_STATES;
 
   const set = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -105,8 +124,16 @@ export default function TaxEstimator() {
     });
   };
 
+  const currentCountryStates = form.country === "India" ? INDIA_STATES : US_STATES;
+  // If the currently selected state isn't in the new country's state list, we should ideally reset it, 
+  // but for simplicity in the UI context, we can just let it be or handle it via a wrapper.
+  const handleCountryChange = (v: string) => {
+    set("country", v);
+    set("state", v === "India" ? INDIA_STATES[0] : US_STATES[0]);
+  };
+
   // const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const fmt = (n: number) => formatCurrency(n, user?.country);
+  const fmt = (n: number) => formatCurrency(n, form.country);
   const badgeClass: Record<string, string> = {
     reminder: "bg-primary/10 text-primary",
     payment: "bg-warning/10 text-warning",
@@ -130,11 +157,10 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                  activeTab === t.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === t.id
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 <t.icon className="h-4 w-4" />
                 {t.label}
@@ -150,7 +176,7 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label>Country/Region</Label>
-                    <Select value={form.country} onValueChange={(v) => set("country", v)}>
+                    <Select value={form.country} onValueChange={handleCountryChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
@@ -159,7 +185,7 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
                     <Label>State/Province</Label>
                     <Select value={form.state} onValueChange={(v) => set("state", v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{US_STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      <SelectContent>{currentCountryStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
@@ -241,9 +267,9 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
                     ))}
                     <div className="border-t my-2" />
                     {[
-                      { label: "Federal Tax", value: fmt(summary.federalTax) },
-                      { label: "State Tax (CA)", value: fmt(summary.stateTax) },
-                      { label: "Self-Employment Tax", value: fmt(summary.selfEmploymentTax) },
+                      { label: form.country === "India" ? "Central Tax" : "Federal Tax", value: fmt(summary.federalTax) },
+                      { label: `State Tax (${form.state})`, value: fmt(summary.stateTax) },
+                      { label: form.country === "India" ? "Professional Tax" : "Self-Employment Tax", value: fmt(summary.selfEmploymentTax) },
                     ].map((r) => (
                       <div key={r.label} className="flex justify-between">
                         <span className="text-muted-foreground">{r.label}</span>

@@ -24,11 +24,10 @@ async function seed() {
   await SuggestedCategory.deleteMany({});
   await Alert.deleteMany({});
 
-  const password = await bcrypt.hash("password", 10);
   const demo = await User.create({
     name: "Alex Demo",
     email: "demo@taxpal.demo",
-    password,
+    password: "password",
     country: "United States",
     income_bracket: "$50,000 - $75,000",
   });
