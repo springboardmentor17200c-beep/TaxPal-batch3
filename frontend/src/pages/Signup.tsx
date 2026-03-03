@@ -14,7 +14,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const countries = ["United States", "Canada", "United Kingdom", "Australia", "Germany", "France", "India"];
-const incomeBrackets = ["Under $25,000", "$25,000 - $50,000", "$50,000 - $75,000", "$75,000 - $100,000", "Over $100,000"];
+const baseIncomeBrackets = ["Under $25,000", "$25,000 - $50,000", "$50,000 - $75,000", "$75,000 - $100,000", "Over $100,000"];
+
+const getCurrencySymbol = (country: string) => {
+  switch (country) {
+    case "United Kingdom": return "£";
+    case "Germany":
+    case "France": return "€";
+    case "India": return "₹";
+    default: return "$";
+  }
+};
 
 const Signup = () => {
   const [password, setPassword] = useState("");
@@ -69,7 +79,7 @@ const Signup = () => {
             </div>
             <div className="space-y-2">
               <Label>Country</Label>
-              <Select value={country} onValueChange={setCountry}>
+              <Select value={country} onValueChange={(val) => { setCountry(val); setIncomeBracket(""); }}>
                 <SelectTrigger><SelectValue placeholder="Select your country" /></SelectTrigger>
                 <SelectContent>
                   {countries.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
@@ -81,7 +91,10 @@ const Signup = () => {
               <Select value={incomeBracket} onValueChange={setIncomeBracket}>
                 <SelectTrigger><SelectValue placeholder="Select your income bracket" /></SelectTrigger>
                 <SelectContent>
-                  {incomeBrackets.map((b) => (<SelectItem key={b} value={b}>{b}</SelectItem>))}
+                  {baseIncomeBrackets.map((b) => {
+                    const localized = b.replace(/\$/g, getCurrencySymbol(country));
+                    return <SelectItem key={localized} value={localized}>{localized}</SelectItem>;
+                  })}
                 </SelectContent>
               </Select>
             </div>
