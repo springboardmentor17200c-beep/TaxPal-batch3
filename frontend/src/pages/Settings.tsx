@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { User, Tag, Bell, Shield, Pencil, X, Plus } from "lucide-react";
+import { api } from "@/lib/api";
 
 /* ---------------- TABS ---------------- */
 
@@ -71,6 +72,8 @@ export default function Settings() {
   const [newCatName, setNewCatName] = useState("");
   const [newCatColor, setNewCatColor] =
     useState(DOT_COLORS[0]);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState("");
 
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
@@ -92,19 +95,43 @@ export default function Settings() {
 
   /* ---------------- CATEGORY ACTIONS ---------------- */
 
-  const addCategory = () => {
-    if (!newCatName.trim()) return;
+  const addCategory = async () => {
+    if (!newCatName.trim()) {
+      setCategoryError("Please enter a category name");
+      return;
+    }
 
-    setCats((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: newCatName.trim(),
-        color: newCatColor,
-      },
-    ]);
+    setIsAddingCategory(true);
+    setCategoryError("");
 
-    setNewCatName("");
+    try {
+      const newCategory = await api<any>("/suggested-categories", {
+        method: "POST",
+        body: JSON.stringify({
+          name: newCatName.trim(),
+          type: catTab,
+          description: "",
+        }),
+      });
+
+      setCats((prev) => [
+        ...prev,
+        {
+          id: newCategory._id as unknown as number,
+          name: newCategory.name,
+          color: newCatColor,
+        },
+      ]);
+
+      setNewCatName("");
+      setCategoryError("");
+    } catch (error: any) {
+      const errorMsg = error?.message || "Failed to add category";
+      setCategoryError(errorMsg);
+      console.error("Error adding category:", error);
+    } finally {
+      setIsAddingCategory(false);
+    }
   };
 
   const removeCategory = (id: number) => {
@@ -204,66 +231,78 @@ export default function Settings() {
                   </div>
 
                   {/* ADD CATEGORY */}
-                  <div className="border-t pt-4 flex gap-3 items-end">
+                  <div className="border-t pt-4">
+                    {categoryError && (
+                      <div className="mb-3 p-2 bg-red-100 text-red-700 rounded text-sm">
+                        {categoryError}
+                      </div>
+                    )}
+                    <div className="flex gap-3 items-end">
 
-                    <div className="flex-1">
-                      <Label>Name</Label>
-                      <Input
-                        placeholder="Category name"
-                        value={newCatName}
-                        onChange={(e) =>
-                          setNewCatName(
-                            e.target.value
-                          )
-                        }
-                        onKeyDown={(e) =>
-                          e.key === "Enter" &&
-                          addCategory()
-                        }
-                      />
-                    </div>
-
-                    {/* PALETTE COLORS */}
-                    <div>
-                      <Label>Palette</Label>
-                      <div className="flex gap-1 mb-2">
-                        {DOT_COLORS.map((c) => (
-                          <button
-                            key={c}
-                            onClick={() =>
-                              setNewCatColor(c)
-                            }
-                            className={`h-6 w-6 rounded-full border-2 ${
-                              newCatColor === c
-                                ? "border-black scale-110"
-                                : "border-transparent"
-                            }`}
-                            style={{
-                              backgroundColor: c,
-                            }}
-                          />
-                        ))}
+                      <div className="flex-1">
+                        <Label>Name</Label>
+                        <Input
+                          placeholder="Category name"
+                          value={newCatName}
+                          onChange={(e) =>
+                            setNewCatName(
+                              e.target.value
+                            )
+                          }
+                          onKeyDown={(e) =>
+                            e.key === "Enter" &&
+                            !isAddingCategory &&
+                            addCategory()
+                          }
+                          disabled={isAddingCategory}
+                        />
                       </div>
 
-                      {/* REAL COLOR PICKER */}
-                      <Input
-                        type="color"
-                        value={newCatColor}
-                        onChange={(e) =>
-                          setNewCatColor(
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
+                      {/* PALETTE COLORS */}
+                      <div>
+                        <Label>Palette</Label>
+                        <div className="flex gap-1 mb-2">
+                          {DOT_COLORS.map((c) => (
+                            <button
+                              key={c}
+                              onClick={() =>
+                                setNewCatColor(c)
+                              }
+                              className={`h-6 w-6 rounded-full border-2 ${
+                                newCatColor === c
+                                  ? "border-black scale-110"
+                                  : "border-transparent"
+                              }`}
+                              style={{
+                                backgroundColor: c,
+                              }}
+                              disabled={isAddingCategory}
+                            />
+                          ))}
+                        </div>
 
-                    <Button
-                      onClick={addCategory}
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add
-                    </Button>
+                        {/* REAL COLOR PICKER */}
+                        <Input
+                          type="color"
+                          value={newCatColor}
+                          onChange={(e) =>
+                            setNewCatColor(
+                              e.target.value
+                            )
+                          }
+                          disabled={isAddingCategory}
+                        />
+                      </div>
+
+                      <Button
+                        onClick={addCategory}
+                        disabled={isAddingCategory}
+                        className="gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        {isAddingCategory ? "Adding..." : "Add"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
