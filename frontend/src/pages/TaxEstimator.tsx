@@ -125,14 +125,13 @@ export default function TaxEstimator() {
   };
 
   const currentCountryStates = form.country === "India" ? INDIA_STATES : US_STATES;
-  // If the currently selected state isn't in the new country's state list, we should ideally reset it, 
-  // but for simplicity in the UI context, we can just let it be or handle it via a wrapper.
+  
   const handleCountryChange = (v: string) => {
     set("country", v);
     set("state", v === "India" ? INDIA_STATES[0] : US_STATES[0]);
   };
 
-  // const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  
 const fmt = (n: number) => formatCurrency(n, user?.country);
   const badgeClass: Record<string, string> = {
     reminder: "bg-primary/10 text-primary",
@@ -230,7 +229,7 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
                       <div key={f.key} className="space-y-1.5">
                         <Label>{f.label}</Label>
                         <div className="relative">
-                          {/* <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span> */}
+                          
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                             {symbol}
                           </span>
