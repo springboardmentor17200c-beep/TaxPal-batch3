@@ -94,35 +94,62 @@ export default function TaxEstimator() {
   const set = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
 
   const calculate = () => {
-    const gross = parseFloat(form.grossIncome) || 0;
-    const deductions =
-      (parseFloat(form.businessExpenses) || 0) +
-      (parseFloat(form.retirementContributions) || 0) +
-      (parseFloat(form.healthInsurance) || 0) +
-      (parseFloat(form.homeOffice) || 0);
-    const taxable = Math.max(0, gross - deductions);
-    const annualTaxable = taxable * 4;
-    let federalRate = 0.22;
-    if (annualTaxable < 11000) federalRate = 0.10;
-    else if (annualTaxable < 44725) federalRate = 0.12;
-    else if (annualTaxable < 95375) federalRate = 0.22;
-    else if (annualTaxable < 200000) federalRate = 0.24;
-    else federalRate = 0.32;
-    const federalTax = (taxable * federalRate);
-    const stateTax = taxable * 0.093;
-    const selfEmployment = gross * 0.1413;
-    const total = federalTax + stateTax + selfEmployment;
-    setSummary({
-      grossIncome: gross,
-      totalDeductions: deductions,
-      taxableIncome: taxable,
-      federalTax,
-      stateTax,
-      selfEmploymentTax: selfEmployment,
-      totalTax: total,
-      effectiveRate: gross > 0 ? (total / gross) * 100 : 0,
-    });
-  };
+
+  const gross = parseFloat(form.grossIncome) || 0;
+
+  const deductions =
+    (parseFloat(form.businessExpenses) || 0) +
+    (parseFloat(form.retirementContributions) || 0) +
+    (parseFloat(form.healthInsurance) || 0) +
+    (parseFloat(form.homeOffice) || 0);
+
+  const taxable = Math.max(0, gross - deductions);
+
+  const annualTaxable = taxable * 4;
+
+  let federalTax = 0;
+
+  if (annualTaxable <= 11000) {
+    federalTax = annualTaxable * 0.10;
+  }
+  else if (annualTaxable <= 44725) {
+    federalTax = 11000 * 0.10 +
+      (annualTaxable - 11000) * 0.12;
+  }
+  else if (annualTaxable <= 95375) {
+    federalTax =
+      11000 * 0.10 +
+      (44725 - 11000) * 0.12 +
+      (annualTaxable - 44725) * 0.22;
+  }
+  else {
+    federalTax =
+      11000 * 0.10 +
+      (44725 - 11000) * 0.12 +
+      (95375 - 44725) * 0.22 +
+      (annualTaxable - 95375) * 0.24;
+  }
+
+  federalTax = federalTax / 4;
+
+  const stateTax = taxable * 0.05;
+
+  const selfEmployment = gross * 0.03;
+
+  const total = federalTax + stateTax + selfEmployment;
+
+  setSummary({
+    grossIncome: gross,
+    totalDeductions: deductions,
+    taxableIncome: taxable,
+    federalTax,
+    stateTax,
+    selfEmploymentTax: selfEmployment,
+    totalTax: total,
+    effectiveRate: gross > 0 ? (total / gross) * 100 : 0,
+  });
+
+};
 
   const currentCountryStates = form.country === "India" ? INDIA_STATES : US_STATES;
   
