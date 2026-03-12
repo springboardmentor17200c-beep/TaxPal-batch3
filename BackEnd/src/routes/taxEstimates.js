@@ -31,13 +31,28 @@ router.post("/", async (req, res) => {
       state,
       filing_status,
       quarter,
-      estimated_tax,
       gross_income_for_quarter,
       business_expenses,
       retirement_contribution,
       health_insurance_premiums,
       home_office_deduction,
     } = req.body;
+
+    const gross = Number(gross_income_for_quarter) || 0;
+
+    const deductions =
+      (Number(business_expenses) || 0) +
+      (Number(retirement_contribution) || 0) +
+      (Number(health_insurance_premiums) || 0) +
+      (Number(home_office_deduction) || 0);
+
+    const taxable = Math.max(0, gross - deductions);
+
+    const federalTax = taxable * 0.12;
+    const stateTax = taxable * 0.04;
+    const selfEmploymentTax = gross * 0.02;
+
+    const estimated_tax = federalTax + stateTax + selfEmploymentTax;
 
     let dueDate = null;
 
@@ -61,20 +76,26 @@ router.post("/", async (req, res) => {
       home_office_deduction,
     });
 
-    /*
-    CREATE ALERT FOR TAX DUE DATE
-    */
-
     if (dueDate) {
       await Alert.create({
         user_id: req.user._id,
-        type: "tax_due",
+        type: "reminder",
         message: `Estimated tax payment due for ${quarter}`,
         alert_date: dueDate,
       });
     }
 
-    res.status(201).json(estimate);
+    res.status(201).json({
+      estimated_tax,
+      federalTax,
+      stateTax,
+      selfEmploymentTax,
+      taxableIncome: taxable,
+      totalDeductions: deductions,
+      grossIncome: gross,
+      effectiveRate: gross > 0 ? (estimated_tax / gross) * 100 : 0,
+    });
+
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -86,8 +107,8 @@ GET TAX CALENDAR EVENTS
 router.get("/calendar", async (req, res) => {
   try {
     const alerts = await Alert.find({ user_id: req.user._id })
-      .sort({ alert_date: 1 })
-      .lean();
+  .sort({ alert_date: 1 })
+  .lean();
 
     res.json(alerts);
   } catch (e) {

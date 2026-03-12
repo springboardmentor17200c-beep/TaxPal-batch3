@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -35,30 +35,11 @@ const INDIA_STATES = [
 ];
 const FILING_STATUS = ["Single", "Married Filing Jointly", "Married Filing Separately", "Head of Household"];
 const QUARTERS = ["Q1 (Jan-Mar 2025)", "Q2 (Apr-Jun 2025)", "Q3 (Jul-Sep 2025)", "Q4 (Oct-Dec 2025)"];
+const badgeClass: Record<string, string> = {
+  reminder: "bg-primary/10 text-primary",
+  payment: "bg-warning/10 text-warning",
+};
 
-const TAX_CALENDAR = [
-  {
-    month: "June 2025",
-    events: [
-      { title: "Reminder: Q2 Estimated Tax Payment", date: "Jun 1, 2025", desc: "Reminder for upcoming q2 estimated tax payment due on Jun 15, 2025", type: "reminder" },
-      { title: "Q2 Estimated Tax Payment", date: "Jun 15, 2025", desc: "Second quarter estimated tax payment due", type: "payment" },
-    ],
-  },
-  {
-    month: "September 2025",
-    events: [
-      { title: "Reminder: Q3 Estimated Tax Payment", date: "Sep 1, 2025", desc: "Reminder for upcoming q3 estimated tax payment due on Sep 15, 2025", type: "reminder" },
-      { title: "Q3 Estimated Tax Payment", date: "Sep 15, 2025", desc: "Third quarter estimated tax payment due", type: "payment" },
-    ],
-  },
-  {
-    month: "December 2025",
-    events: [
-      { title: "Reminder: Q4 Estimated Tax Payment", date: "Dec 1, 2025", desc: "Reminder for upcoming q4 estimated tax payment due on Jan 15, 2026", type: "reminder" },
-      { title: "Q4 Estimated Tax Payment", date: "Jan 15, 2026", desc: "Fourth quarter estimated tax payment due", type: "payment" },
-    ],
-  },
-];
 
 interface TaxSummary {
   grossIncome: number;
@@ -86,6 +67,28 @@ export default function TaxEstimator() {
     homeOffice: "",
   });
   const [summary, setSummary] = useState<TaxSummary | null>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const fetchAlerts = async () => {
+  try {
+    const token = localStorage.getItem("taxpal_token");
+
+    const res = await fetch("http://localhost:4000/api/tax-estimates/calendar", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    setAlerts(data);
+
+  } catch (err) {
+    console.error("Failed to load alerts", err);
+  }
+};
+
+useEffect(() => {
+  fetchAlerts();
+}, []);
 
   const symbol = getCurrencySymbol(form.country);
 
@@ -93,61 +96,48 @@ export default function TaxEstimator() {
 
   const set = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
 
-  const calculate = () => {
+ const calculate = async () => {
 
-  const gross = parseFloat(form.grossIncome) || 0;
+  try {
 
-  const deductions =
-    (parseFloat(form.businessExpenses) || 0) +
-    (parseFloat(form.retirementContributions) || 0) +
-    (parseFloat(form.healthInsurance) || 0) +
-    (parseFloat(form.homeOffice) || 0);
+    const token = localStorage.getItem("taxpal_token");
 
-  const taxable = Math.max(0, gross - deductions);
+    const res = await fetch("http://localhost:4000/api/tax-estimates", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        country: form.country,
+        state: form.state,
+        filing_status: form.filingStatus,
+        quarter: form.quarter,
+        gross_income_for_quarter: Number(form.grossIncome),
+        business_expenses: Number(form.businessExpenses),
+        retirement_contribution: Number(form.retirementContributions),
+        health_insurance_premiums: Number(form.healthInsurance),
+        home_office_deduction: Number(form.homeOffice),
+      }),
+    });
 
-  const annualTaxable = taxable * 4;
+    const data = await res.json();
 
-  let federalTax = 0;
+    setSummary({
+      grossIncome: data.grossIncome,
+      totalDeductions: data.totalDeductions,
+      taxableIncome: data.taxableIncome,
+      federalTax: data.federalTax,
+      stateTax: data.stateTax,
+      selfEmploymentTax: data.selfEmploymentTax,
+      totalTax: data.estimated_tax,
+      effectiveRate: data.effectiveRate,
+    });
+    fetchAlerts();
 
-  if (annualTaxable <= 11000) {
-    federalTax = annualTaxable * 0.10;
+  } catch (err) {
+    console.error(err);
   }
-  else if (annualTaxable <= 44725) {
-    federalTax = 11000 * 0.10 +
-      (annualTaxable - 11000) * 0.12;
-  }
-  else if (annualTaxable <= 95375) {
-    federalTax =
-      11000 * 0.10 +
-      (44725 - 11000) * 0.12 +
-      (annualTaxable - 44725) * 0.22;
-  }
-  else {
-    federalTax =
-      11000 * 0.10 +
-      (44725 - 11000) * 0.12 +
-      (95375 - 44725) * 0.22 +
-      (annualTaxable - 95375) * 0.24;
-  }
-
-  federalTax = federalTax / 4;
-
-  const stateTax = taxable * 0.05;
-
-  const selfEmployment = gross * 0.03;
-
-  const total = federalTax + stateTax + selfEmployment;
-
-  setSummary({
-    grossIncome: gross,
-    totalDeductions: deductions,
-    taxableIncome: taxable,
-    federalTax,
-    stateTax,
-    selfEmploymentTax: selfEmployment,
-    totalTax: total,
-    effectiveRate: gross > 0 ? (total / gross) * 100 : 0,
-  });
 
 };
 
@@ -158,12 +148,12 @@ export default function TaxEstimator() {
     set("state", v === "India" ? INDIA_STATES[0] : US_STATES[0]);
   };
 
-  
 const fmt = (n: number) => formatCurrency(n, user?.country);
-  const badgeClass: Record<string, string> = {
-    reminder: "bg-primary/10 text-primary",
-    payment: "bg-warning/10 text-warning",
-  };
+
+const badgeClass: Record<string, string> = {
+  reminder: "bg-primary/10 text-primary",
+  payment: "bg-warning/10 text-warning",
+};
 
   return (
     <SidebarProvider>
@@ -235,7 +225,7 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
                   <div className="space-y-1.5">
                     <Label>Gross Income for Quarter</Label>
                     <div className="relative">
-                    
+
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                         {symbol}
                       </span>
@@ -319,38 +309,52 @@ const fmt = (n: number) => formatCurrency(n, user?.country);
               </div>
             </div>
           )}
-
           {activeTab === "calendar" && (
-            <div className="space-y-8">
-              <h2 className="font-semibold text-foreground">Tax Calendar</h2>
-              {TAX_CALENDAR.map((group) => (
-                <div key={group.month}>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">{group.month}</h3>
-                  <div className="space-y-3">
-                    {group.events.map((ev) => (
-                      <div key={ev.title} className="rounded-xl border bg-card p-4 flex items-start justify-between gap-4">
-                        <div>
-                          <p className="font-semibold text-sm text-foreground">{ev.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{ev.date}</p>
-                          <p className="text-sm text-muted-foreground mt-1">{ev.desc}</p>
-                        </div>
-                        <span className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-medium ${badgeClass[ev.type]}`}>
-                          {ev.type}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+  <div className="space-y-8">
+    <h2 className="font-semibold text-foreground">Tax Calendar</h2>
+
+    <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+      Tax Alerts
+    </h3>
+
+    <div className="space-y-3">
+      {alerts && alerts.length > 0 ? (
+        alerts.map((alert) => (
+          <div
+            key={alert._id}
+            className="rounded-xl border bg-card p-4 flex items-start justify-between gap-4"
+          >
+            <div>
+              <p className="font-semibold text-sm text-foreground">
+                {alert.message || "Tax Reminder"}
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {alert.alert_date
+                  ? new Date(alert.alert_date).toDateString()
+                  : ""}
+              </p>
+
+              <p className="text-sm text-muted-foreground mt-1">
+                Estimated tax payment reminder
+              </p>
             </div>
-          )}
+
+            <span className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium bg-primary/10 text-primary">
+              reminder
+            </span>
+          </div>
+        ))
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          No tax alerts available.
+        </p>
+      )}
+    </div>
+  </div>
+)}
         </main>
       </div>
     </SidebarProvider>
   );
 }
-
-const badgeClass: Record<string, string> = {
-  reminder: "bg-primary/10 text-primary",
-  payment: "bg-warning/10 text-warning",
-};
