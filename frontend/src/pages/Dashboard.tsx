@@ -10,7 +10,7 @@ import RecordTransactionDialog from "@/components/RecordTransactionDialog";
 import { Button } from "@/components/ui/button";
 import { CirclePlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { transactionsApi } from "@/lib/api";
+import { transactionsApi, taxEstimatesApi } from "@/lib/api";
 
 const Dashboard = () => {
   const [incomeOpen, setIncomeOpen] = useState(false);
@@ -24,6 +24,15 @@ const Dashboard = () => {
     queryKey: ["transactions"],
     queryFn: () => transactionsApi.list(),
   });
+  const { data: taxEstimates = [] } = useQuery({
+    queryKey: ["tax-estimates"],
+    queryFn: () => taxEstimatesApi.list(),
+  });
+
+  const totalTaxDue = (taxEstimates as Array<{ estimated_tax: number }>).reduce(
+    (sum, est) => sum + (est.estimated_tax || 0),
+    0
+  );
 
   return (
     <SidebarProvider>
@@ -69,8 +78,8 @@ const Dashboard = () => {
 
               <StatCard
                 title="Estimated Tax Due"
-                value={0}
-                subtitle="No upcoming taxes"
+                value={totalTaxDue}
+                subtitle="From tax estimates"
                 type="warning"
               />
 
