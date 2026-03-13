@@ -2,6 +2,7 @@ import { Router } from "express";
 import { auth } from "../middleware/auth.js";
 import TaxEstimate from "../models/TaxEstimate.js";
 import Alert from "../models/Alert.js";
+import { calculateTax } from "../taxEngine.js";
 
 const router = Router();
 router.use(auth);
@@ -48,20 +49,25 @@ router.post("/", async (req, res) => {
 
     const taxable = Math.max(0, gross - deductions);
 
-    const federalTax = taxable * 0.12;
-    const stateTax = taxable * 0.04;
-    const selfEmploymentTax = gross * 0.02;
+    // ── Country-aware tax calculation ──────────────────────────────────────
+    const { federalTax, stateTax, selfEmploymentTax, totalTax } = calculateTax({
+      country:       country || "United States",
+      state:         state   || "",
+      filingStatus:  filing_status || "Single",
+      taxableIncome: taxable,
+      grossIncome:   gross,
+    });
 
-    const estimated_tax = federalTax + stateTax + selfEmploymentTax;
+    const estimated_tax = totalTax;
+    // ──────────────────────────────────────────────────────────────────────
 
     let dueDate = null;
-
     if (quarter.includes("Q1")) dueDate = new Date("2025-04-15");
     if (quarter.includes("Q2")) dueDate = new Date("2025-06-15");
     if (quarter.includes("Q3")) dueDate = new Date("2025-09-15");
     if (quarter.includes("Q4")) dueDate = new Date("2026-01-15");
 
-    const estimate = await TaxEstimate.create({
+    await TaxEstimate.create({
       user_id: req.user._id,
       country,
       state,

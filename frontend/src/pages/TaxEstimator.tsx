@@ -35,12 +35,6 @@ const INDIA_STATES = [
 ];
 const FILING_STATUS = ["Single", "Married Filing Jointly", "Married Filing Separately", "Head of Household"];
 const QUARTERS = ["Q1 (Jan-Mar 2025)", "Q2 (Apr-Jun 2025)", "Q3 (Jul-Sep 2025)", "Q4 (Oct-Dec 2025)"];
-const badgeClass: Record<string, string> = {
-  reminder: "bg-primary/10 text-primary",
-  payment: "bg-warning/10 text-warning",
-};
-
-
 interface TaxSummary {
   grossIncome: number;
   totalDeductions: number;
@@ -91,8 +85,6 @@ useEffect(() => {
 }, []);
 
   const symbol = getCurrencySymbol(form.country);
-
-  const statesList = form.country === "India" ? INDIA_STATES : US_STATES;
 
   const set = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
 
