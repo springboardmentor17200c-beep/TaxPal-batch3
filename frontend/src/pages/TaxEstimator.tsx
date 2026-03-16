@@ -34,7 +34,13 @@ const INDIA_STATES = [
   "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Other"
 ];
 const FILING_STATUS = ["Single", "Married Filing Jointly", "Married Filing Separately", "Head of Household"];
-const QUARTERS = ["Q1 (Jan-Mar 2025)", "Q2 (Apr-Jun 2025)", "Q3 (Jul-Sep 2025)", "Q4 (Oct-Dec 2025)"];
+const QUARTERS = ["Q1", "Q2", "Q3", "Q4"];
+const QUARTER_LABELS = {
+  "Q1": "Jan-Mar",
+  "Q2": "Apr-Jun",
+  "Q3": "Jul-Sep",
+  "Q4": "Oct-Dec"
+};
 interface TaxSummary {
   grossIncome: number;
   totalDeductions: number;
@@ -48,12 +54,13 @@ interface TaxSummary {
 
 export default function TaxEstimator() {
   const { user } = useAuth();
+  const currentYear = new Date().getFullYear();
   const [activeTab, setActiveTab] = useState<"calculator" | "calendar">("calculator");
   const [form, setForm] = useState({
     country: "United States",
     state: "California",
     filingStatus: "Single",
-    quarter: "Q2 (Apr-Jun 2025)",
+    quarter: "Q2",
     grossIncome: "",
     businessExpenses: "",
     retirementContributions: "",
@@ -104,7 +111,7 @@ useEffect(() => {
         country: form.country,
         state: form.state,
         filing_status: form.filingStatus,
-        quarter: form.quarter,
+        quarter: `${form.quarter} (${QUARTER_LABELS[form.quarter as keyof typeof QUARTER_LABELS]} ${currentYear})`,
         gross_income_for_quarter: Number(form.grossIncome),
         business_expenses: Number(form.businessExpenses),
         retirement_contribution: Number(form.retirementContributions),
@@ -207,7 +214,7 @@ const badgeClass: Record<string, string> = {
                     <Label>Quarter</Label>
                     <Select value={form.quarter} onValueChange={(v) => set("quarter", v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{QUARTERS.map((q) => <SelectItem key={q} value={q}>{q}</SelectItem>)}</SelectContent>
+                      <SelectContent>{QUARTERS.map((q) => <SelectItem key={q} value={q}>{q} ({QUARTER_LABELS[q as keyof typeof QUARTER_LABELS]} {currentYear})</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 </div>

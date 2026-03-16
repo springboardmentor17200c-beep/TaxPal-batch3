@@ -61,11 +61,14 @@ router.post("/", async (req, res) => {
     const estimated_tax = totalTax;
     // ──────────────────────────────────────────────────────────────────────
 
+    const yearMatch = quarter.match(/(\d{4})\)/);
+    const year = yearMatch ? parseInt(yearMatch[1]) : 2025;
+
     let dueDate = null;
-    if (quarter.includes("Q1")) dueDate = new Date("2025-04-15");
-    if (quarter.includes("Q2")) dueDate = new Date("2025-06-15");
-    if (quarter.includes("Q3")) dueDate = new Date("2025-09-15");
-    if (quarter.includes("Q4")) dueDate = new Date("2026-01-15");
+    if (quarter.includes("Q1")) dueDate = new Date(`${year}-04-15`);
+    if (quarter.includes("Q2")) dueDate = new Date(`${year}-06-15`);
+    if (quarter.includes("Q3")) dueDate = new Date(`${year}-09-15`);
+    if (quarter.includes("Q4")) dueDate = new Date(`${year + 1}-01-15`);
 
     await TaxEstimate.create({
       user_id: req.user._id,

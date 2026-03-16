@@ -15,12 +15,13 @@
 // Boundaries are contiguous: each slab starts exactly where the previous ends.
 // slabSize = max - min (no +1), so there are no gaps or double-counted rupees.
 const INDIA_SLABS = [
-  { min: 0,         max: 300_000,   rate: 0.00 },  // 0 – 3 L
-  { min: 300_000,   max: 600_000,   rate: 0.05 },  // 3 – 6 L
-  { min: 600_000,   max: 900_000,   rate: 0.10 },  // 6 – 9 L
-  { min: 900_000,   max: 1_200_000, rate: 0.15 },  // 9 – 12 L
-  { min: 1_200_000, max: 1_500_000, rate: 0.20 },  // 12 – 15 L
-  { min: 1_500_000, max: Infinity,  rate: 0.30 },  // > 15 L
+  { min: 0,         max: 400_000,   rate: 0.00 },  // 0 – 4 L
+  { min: 400_001,   max: 800_000,   rate: 0.05 },  // 5 – 8 L
+  { min: 800_001,   max: 1200_000,   rate: 0.10 },  // 8 – 12 L
+  { min: 1200_001,   max: 1600_000, rate: 0.15 },  // 12 – 16 L
+  { min: 1600_001, max: 2000_000, rate: 0.20 },  // 16 – 20 L
+  { min: 2000_001, max: 2400_000, rate: 0.20 },  // 20 – 24 L
+  { min: 2400_001, max: Infinity,  rate: 0.30 },  // > 24 L
 ];
 
 /** Health & Education Cess rate applied on top of income tax. */
