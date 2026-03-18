@@ -304,3 +304,182 @@ function round2(n) {
  *   TOTAL ANNUAL TAX    = ₹11,600
  *   Quarterly portion   = ₹2,900
  */
+
+
+// ─── Canada ───────────────────────────────────────────────────────────
+
+/**
+ * Simplified US federal tax brackets (2024, Single filer, quarterly proration).
+ * In this app the input is already quarterly, so we keep the US logic simple.
+ */
+const Canada_BRACKETS = [
+  { min: 0,      max: 20_000,  rate: 0.10 },
+  { min: 20_001, max: 100_000,  rate: 0.12 },
+  { min: 100_001, max: 201_050, rate: 0.22 },
+  { min: 201_051, max: 383_900, rate: 0.24 },
+  { min: 383_901, max: 487_450, rate: 0.32 },
+  { min: 487_451, max: 731_200, rate: 0.35 },
+  { min: 731_201, max: Infinity, rate: 0.37 },
+];
+
+/** Approximate state income tax rates by state (flat-rate approximation). */
+const Canada_STATE_RATES = {
+  Alabama:        0.1,
+  Alaska:         0.2,
+  Arizona:      0.12,
+  Arkansas:     0.9,
+  Colorado:     0.3,
+  Connecticut:  0,
+  Delaware:     0,
+  Georgia:      0,
+  Hawaii:       0,
+  Idaho:        0,
+  Illinois:     0,
+  Indiana:      0,
+  Iowa:           0,
+  Kansas:         0,
+  Kentucky:       0,
+  Louisiana:      0
+};
+const Canada_DEFAULT_STATE_RATE = 0.05;
+
+/**
+ * @param {number} taxableIncome  Annual taxable income in USD.
+ * @returns {number}              Federal income tax.
+ */
+function computeCanadaFederalTax(taxableIncome) {
+  let tax = 0;
+  let remaining = taxableIncome;
+  for (const bracket of Canada_BRACKETS) {
+    if (remaining <= 0) break;
+    const size =
+      bracket.max === Infinity ? remaining : bracket.max - bracket.min + 1;
+    tax += Math.min(remaining, size) * bracket.rate;
+    remaining -= size;
+  }
+  return tax;
+}
+
+/**
+ * US quarterly tax calculation.
+ *
+ * @param {number} quarterlyTaxableIncome
+ * @param {string} state
+ * @param {number} quarterlyGrossIncome   Needed for self-employment tax base.
+ * @returns {{ federalTax: number, stateTax: number, selfEmploymentTax: number, totalTax: number }}
+ */
+export function calculateCanadaTax(quarterlyTaxableIncome, state = "", quarterlyGrossIncome = 0) {
+  const annualTaxable = quarterlyTaxableIncome * 4;
+  const annualGross   = quarterlyGrossIncome * 4;
+
+  const annualFederal = computeCanadaFederalTax(annualTaxable);
+  const federalTax    = annualFederal / 4;
+
+  const stateRate = Canada_STATE_RATES[state] ?? Canada_DEFAULT_STATE_RATE;
+  const stateTax  = (annualTaxable * stateRate) / 4;
+
+  // Self-employment tax: 15.3% on 92.35% of net self-employment income.
+  const selfEmploymentTax = annualGross * 0.9235 * 0.153 / 4;
+
+  const totalTax = federalTax + stateTax + selfEmploymentTax;
+
+  return {
+    federalTax:        round2(federalTax),
+    stateTax:          round2(stateTax),
+    selfEmploymentTax: round2(selfEmploymentTax),
+    totalTax:          round2(totalTax),
+  };
+}
+
+// ─── TOP-LEVEL DISPATCHER ────────────────────────────────────────────────────
+
+/**
+ * Calculates estimated quarterly tax for the given country.
+ *
+ * @param {object} params
+ * @param {string} params.country
+ * @param {string} params.state
+ * @param {string} params.filingStatus
+ * @param {number} params.taxableIncome    Quarterly taxable income.
+ * @param {number} params.grossIncome      Quarterly gross income.
+ * @returns {{
+ *   federalTax: number,
+ *   stateTax: number,
+ *   selfEmploymentTax: number,
+ *   totalTax: number
+ * }}
+ */
+export function calculateTax({ country, state, filingStatus, taxableIncome, grossIncome }) {
+  if (country === "Canada") {
+    const { centralTax, stateTax, professionalTax, totalTax } =
+      calculateIndiaTax(taxableIncome, state);
+
+    // Map to the field names the frontend already reads:
+    //   federalTax       → Central Income Tax (incl. cess)
+    //   stateTax         → 0 (no state income tax in India)
+    //   selfEmploymentTax → Professional Tax
+    return {
+      federalTax:        centralTax,
+      stateTax:          stateTax,
+      selfEmploymentTax: professionalTax,
+      totalTax,
+    };
+  }
+
+  if (country === "Canada") {
+    return calculateCanadaTax(taxableIncome, state, grossIncome);
+  }
+
+  // Canada, UK, Australia, Germany, etc. — generic fallback.
+  return calculateGenericTax(taxableIncome, grossIncome);
+}
+
+// ─── TOP-LEVEL DISPATCHER ────────────────────────────────────────────────────
+
+/**
+ * Calculates estimated quarterly tax for the given country.
+ *
+ * @param {object} params
+ * @param {string} params.country
+ * @param {string} params.state
+ * @param {string} params.filingStatus
+ * @param {number} params.taxableIncome    Quarterly taxable income.
+ * @param {number} params.grossIncome      Quarterly gross income.
+ * @returns {{
+ *   federalTax: number,
+ *   stateTax: number,
+ *   selfEmploymentTax: number,
+ *   totalTax: number
+ * }}
+ */
+export function calculateTax({ country, state, filingStatus, taxableIncome, grossIncome }) {
+  if (country === "India") {
+    const { centralTax, stateTax, professionalTax, totalTax } =
+      calculateIndiaTax(taxableIncome, state);
+
+    // Map to the field names the frontend already reads:
+    //   federalTax       → Central Income Tax (incl. cess)
+    //   stateTax         → 0 (no state income tax in India)
+    //   selfEmploymentTax → Professional Tax
+    return {
+      federalTax:        centralTax,
+      stateTax:          stateTax,
+      selfEmploymentTax: professionalTax,
+      totalTax,
+    };
+  }
+
+  if (country === "Canada") {
+    return calculateCanadaTax(taxableIncome, state, grossIncome);
+  }
+
+  // Canada, UK, Australia, Germany, etc. — generic fallback.
+  return calculateGenericTax(taxableIncome, grossIncome);
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+/** Round to 2 decimal places. */
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
