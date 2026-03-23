@@ -251,6 +251,10 @@ export function calculateTax({ country, state, filingStatus, taxableIncome, gros
     return calculateUSTax(taxableIncome, state, grossIncome);
   }
 
+  if (country === "Canada") {
+    return calculateCanadaTax(taxableIncome, state, grossIncome);
+  }
+
   // Canada, UK, Australia, Germany, etc. — generic fallback.
   return calculateGenericTax(taxableIncome, grossIncome);
 }
@@ -391,95 +395,7 @@ export function calculateCanadaTax(quarterlyTaxableIncome, state = "", quarterly
   };
 }
 
-// ─── TOP-LEVEL DISPATCHER ────────────────────────────────────────────────────
 
-/**
- * Calculates estimated quarterly tax for the given country.
- *
- * @param {object} params
- * @param {string} params.country
- * @param {string} params.state
- * @param {string} params.filingStatus
- * @param {number} params.taxableIncome    Quarterly taxable income.
- * @param {number} params.grossIncome      Quarterly gross income.
- * @returns {{
- *   federalTax: number,
- *   stateTax: number,
- *   selfEmploymentTax: number,
- *   totalTax: number
- * }}
- */
-export function calculateTax({ country, state, filingStatus, taxableIncome, grossIncome }) {
-  if (country === "Canada") {
-    const { centralTax, stateTax, professionalTax, totalTax } =
-      calculateIndiaTax(taxableIncome, state);
 
-    // Map to the field names the frontend already reads:
-    //   federalTax       → Central Income Tax (incl. cess)
-    //   stateTax         → 0 (no state income tax in India)
-    //   selfEmploymentTax → Professional Tax
-    return {
-      federalTax:        centralTax,
-      stateTax:          stateTax,
-      selfEmploymentTax: professionalTax,
-      totalTax,
-    };
-  }
 
-  if (country === "Canada") {
-    return calculateCanadaTax(taxableIncome, state, grossIncome);
-  }
 
-  // Canada, UK, Australia, Germany, etc. — generic fallback.
-  return calculateGenericTax(taxableIncome, grossIncome);
-}
-
-// ─── TOP-LEVEL DISPATCHER ────────────────────────────────────────────────────
-
-/**
- * Calculates estimated quarterly tax for the given country.
- *
- * @param {object} params
- * @param {string} params.country
- * @param {string} params.state
- * @param {string} params.filingStatus
- * @param {number} params.taxableIncome    Quarterly taxable income.
- * @param {number} params.grossIncome      Quarterly gross income.
- * @returns {{
- *   federalTax: number,
- *   stateTax: number,
- *   selfEmploymentTax: number,
- *   totalTax: number
- * }}
- */
-export function calculateTax({ country, state, filingStatus, taxableIncome, grossIncome }) {
-  if (country === "India") {
-    const { centralTax, stateTax, professionalTax, totalTax } =
-      calculateIndiaTax(taxableIncome, state);
-
-    // Map to the field names the frontend already reads:
-    //   federalTax       → Central Income Tax (incl. cess)
-    //   stateTax         → 0 (no state income tax in India)
-    //   selfEmploymentTax → Professional Tax
-    return {
-      federalTax:        centralTax,
-      stateTax:          stateTax,
-      selfEmploymentTax: professionalTax,
-      totalTax,
-    };
-  }
-
-  if (country === "Canada") {
-    return calculateCanadaTax(taxableIncome, state, grossIncome);
-  }
-
-  // Canada, UK, Australia, Germany, etc. — generic fallback.
-  return calculateGenericTax(taxableIncome, grossIncome);
-}
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-/** Round to 2 decimal places. */
-function round2(n) {
-  return Math.round(n * 100) / 100;
-}
