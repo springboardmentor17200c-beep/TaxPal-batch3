@@ -15,7 +15,7 @@ Express + MongoDB API for TaxPal.
 
 3. **Install and run**
    ```bash
-   cd backend
+   cd BackEnd
    npm install
    npm run dev
    ```

@@ -9,7 +9,9 @@ MERN stack: **M**ongoDB · **E**xpress · **R**eact · **N**ode.
 ### Prerequisites
 
 - **Node.js** (v18+) installed
-- **MongoDB** running locally (database: `tax1`, URI: `mongodb://localhost:27017/tax1`)
+- **MongoDB** database (local or cloud):
+  - **Local:** MongoDB running locally (database: `tax1`, URI: `mongodb://localhost:27017/tax1`)
+  - **Cloud:** MongoDB Atlas cluster (configured in `BackEnd/.env` as `MONGODB_URI`)
 
 ---
 
@@ -18,7 +20,7 @@ MERN stack: **M**ongoDB · **E**xpress · **R**eact · **N**ode.
 Open a terminal and run:
 
 ```bash
-cd backend
+cd BackEnd
 npm install
 npm run seed
 npm run dev
@@ -46,13 +48,13 @@ npm run dev
 - **First time only:** run `npm install`.
 - **Every time:** run `npm run dev` to start the React app.
 
-You should see a local URL, e.g. **http://localhost:5173**
+You should see a local URL, e.g. **http://localhost:5173** (or another port if 5173 is busy)
 
 ---
 
 ### Step 3: Use the app
 
-1. In your browser, go to **http://localhost:5173** (or the URL Vite shows).
+1. In your browser, go to the URL shown by Vite (usually **http://localhost:5173**).
 3. Use Dashboard, Transactions, Budgets, Tax Estimator, and Reports.
 
 ---
