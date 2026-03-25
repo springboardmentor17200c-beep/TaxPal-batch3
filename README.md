@@ -12,6 +12,7 @@ MERN stack: **M**ongoDB · **E**xpress · **R**eact · **N**ode.
 - **MongoDB** database (local or cloud):
   - **Local:** MongoDB running locally (database: `tax1`, URI: `mongodb://localhost:27017/tax1`)
   - **Cloud:** MongoDB Atlas cluster (configured in `BackEnd/.env` as `MONGODB_URI`)
+    - **Important:** Ensure Network Access allows `0.0.0.0/0` (all IPs) for remote access
 
 ---
 
@@ -42,20 +43,24 @@ Open a **second** terminal and run:
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --host
 ```
 
 - **First time only:** run `npm install`.
-- **Every time:** run `npm run dev` to start the React app.
+- **Every time:** run `npm run dev -- --host` to start the React app (accessible from any device on the network).
 
-You should see a local URL, e.g. **http://localhost:5173** (or another port if 5173 is busy)
+You should see local and network URLs, e.g.:
+- **Local:** http://localhost:5173/
+- **Network:** http://192.168.1.54:5173/ (accessible from any device on your network)
 
 ---
 
 ### Step 3: Use the app
 
-1. In your browser, go to the URL shown by Vite (usually **http://localhost:5173**).
-3. Use Dashboard, Transactions, Budgets, Tax Estimator, and Reports.
+1. In your browser, go to the **Network URL** shown by Vite (e.g., **http://192.168.1.54:5173**) - this makes it accessible from any device on your network.
+2. Use Dashboard, Transactions, Budgets, Tax Estimator, and Reports.
+
+**Note:** For access from outside your local network, you'll need to configure port forwarding on your router or use a tunneling service.
 
 ---
 

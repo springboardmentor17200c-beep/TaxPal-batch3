@@ -29,8 +29,8 @@ app.use("/api/alerts", alertRoutes);
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 mongoose.connect(MONGODB_URI).then(() => {
-  app.listen(PORT, () => {
-    console.log(`TaxPal API running at http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`TaxPal API running at http://0.0.0.0:${PORT}`);
   });
 }).catch((err) => {
   console.error("MongoDB connection error:", err);
