@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -36,38 +36,71 @@ const DOT_COLORS = [
 /* ---------------- TYPES ---------------- */
 
 interface Category {
-  id: number;
+   id: string; // ✅ change from number → string
   name: string;
   color: string;
 }
 
 /* ---------------- INITIAL DATA ---------------- */
 
-const initialExpense: Category[] = [
-  { id: 1, name: "Business Expenses", color: "#ad2bf4" },
-  { id: 2, name: "Office Rent", color: "#1e42c9" },
-  { id: 3, name: "Software Subscriptions", color: "#2dcfd5" },
-  { id: 4, name: "Professional Development", color: "#2acb32" },
-];
+// const initialExpense: Category[] = [
+//   { id: 1, name: "Business Expenses", color: "#ad2bf4" },
+//   { id: 2, name: "Office Rent", color: "#1e42c9" },
+//   { id: 3, name: "Software Subscriptions", color: "#2dcfd5" },
+//   { id: 4, name: "Professional Development", color: "#2acb32" },
+// ];
 
-const initialIncome: Category[] = [
-  { id: 1, name: "Salary", color: "#2acb32" },
-  { id: 2, name: "Freelance", color: "#1e42c9" },
-  { id: 3, name: "Investments", color: "#ad2bf4" },
-];
+// const initialIncome: Category[] = [
+//   { id: 1, name: "Salary", color: "#2acb32" },
+//   { id: 2, name: "Freelance", color: "#1e42c9" },
+//   { id: 3, name: "Investments", color: "#ad2bf4" },
+// ];
 
 /* ================= COMPONENT ================= */
 
 export default function Settings() {
+  useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const data = await api<any[]>("/suggested-categories");
+
+      console.log("DATA FROM BACKEND:", data);
+
+      const expense = data.filter((c) => c.type === "expense");
+      const income = data.filter((c) => c.type === "income");
+
+      setExpenseCategories(
+        expense.map((c) => ({
+          id: c._id,
+          name: c.name,
+          color: c.color || "#ad2bf4",
+        }))
+      );
+
+      setIncomeCategories(
+        income.map((c) => ({
+          id: c._id,
+          name: c.name,
+          color: c.color || "#2acb32",
+        }))
+      );
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+    }
+  };
+
+  fetchCategories();
+}, []);
+
   const [activeTab, setActiveTab] = useState("profile");
   const [catTab, setCatTab] =
     useState<"expense" | "income">("expense");
 
   const [expenseCategories, setExpenseCategories] =
-    useState<Category[]>(initialExpense);
+    useState<Category[]>([]);
 
   const [incomeCategories, setIncomeCategories] =
-    useState<Category[]>(initialIncome);
+    useState<Category[]>([]);
 
   const [newCatName, setNewCatName] = useState("");
   const [newCatColor, setNewCatColor] =
@@ -107,17 +140,24 @@ export default function Settings() {
     try {
       const newCategory = await api<any>("/suggested-categories", {
         method: "POST",
+        // body: JSON.stringify({
+        //   name: newCatName.trim(),
+        //   type: catTab,
+        //   description: "",
+        // }),
         body: JSON.stringify({
           name: newCatName.trim(),
           type: catTab,
           description: "",
+          color: newCatColor, // 🔥 IMPORTANT
         }),
       });
 
       setCats((prev) => [
         ...prev,
         {
-          id: newCategory._id as unknown as number,
+          // id: newCategory._id as unknown as number,
+          id: newCategory._id ,
           name: newCategory.name,
           color: newCatColor,
         },
@@ -134,9 +174,21 @@ export default function Settings() {
     }
   };
 
-  const removeCategory = (id: number) => {
+  // const removeCategory = (id: number) => {
+  //   setCats((prev) => prev.filter((c) => c.id !== id));
+  // };
+  const removeCategory = async (id: string) => {
+  try {
+    await api(`/suggested-categories/${id}`, {
+      method: "DELETE",
+    });
+
+    // remove from UI after backend success
     setCats((prev) => prev.filter((c) => c.id !== id));
-  };
+      } catch (err) {
+        console.error("Delete failed:", err);
+      }
+    };
 
   /* ================= UI ================= */
 

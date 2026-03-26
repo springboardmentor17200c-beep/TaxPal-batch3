@@ -16,8 +16,8 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name, type, description } = req.body;
-    
+    // const { name, type, description } = req.body;
+    const { name, type, description, color } = req.body;    
     if (!name || !type) {
       return res.status(400).json({ error: "Name and type are required" });
     }
@@ -26,10 +26,12 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Type must be 'income' or 'expense'" });
     }
 
+    
     const category = new SuggestedCategory({
       name,
       type,
       description: description || "",
+      color: color || "#ad2bf4",
     });
 
     await category.save();
@@ -40,6 +42,22 @@ router.post("/", async (req, res) => {
     } else {
       res.status(500).json({ error: e.message });
     }
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await SuggestedCategory.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.json({ message: "Category deleted successfully" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
