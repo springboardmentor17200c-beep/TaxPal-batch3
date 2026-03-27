@@ -71,10 +71,42 @@ router.get("/download/:id", async (req, res) => {
       return res.status(404).json({ error: "Report not found" });
     }
 
+    let query = { user_id: req.user._id };
+    if (report.report_type === "Income Statement") {
+      query.type = "income";
+    } else if (report.report_type === "Expense Report") {
+      query.type = "expense";
+    }
+
+    const now = new Date();
+    let startDate = null;
+    let endDate = null;
+
+    if (report.period === "Current Month") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (report.period === "Last Month") {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (report.period === "Last 3 Months") {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    } else if (report.period === "Last 6 Months") {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+    } else if (report.period === "Year to Date") {
+      startDate = new Date(now.getFullYear(), 0, 1);
+    } else if (report.period === "Last Year") {
+      startDate = new Date(now.getFullYear() - 1, 0, 1);
+      endDate = new Date(now.getFullYear(), 0, 1);
+    }
+
+    if (startDate) {
+      query.date = { $gte: startDate };
+      if (endDate) {
+        query.date.$lt = endDate;
+      }
+    }
+
     // Fetch transactions
-    const transactions = await Transaction.find({
-      user_id: req.user._id,
-    });
+    const transactions = await Transaction.find(query);
 
     const doc = new PDFDocument({ margin: 40 });
 
@@ -131,16 +163,22 @@ doc.moveDown(0.5);
     let totalExpense = 0;
 
     transactions.forEach((t) => {
-  doc
-    .fontSize(10)
-    .fillColor("#444")
-    .text(t.type.padEnd(12), { continued: true })
-    .text(t.category.padEnd(15), { continued: true })
-    .text(`₹${t.amount}`.padEnd(12), { continued: true })
-    .text(new Date(t.date).toDateString());
+      if (t.type === "income") {
+        totalIncome += t.amount || 0;
+      } else if (t.type === "expense") {
+        totalExpense += t.amount || 0;
+      }
 
-  doc.moveDown(0.5);
-});
+      doc
+        .fontSize(10)
+        .fillColor("#444")
+        .text(t.type.padEnd(12), { continued: true })
+        .text(t.category.padEnd(15), { continued: true })
+        .text(`₹${t.amount}`.padEnd(12), { continued: true })
+        .text(new Date(t.date).toDateString());
+
+      doc.moveDown(0.5);
+    });
 
     doc.moveDown(1);
 
