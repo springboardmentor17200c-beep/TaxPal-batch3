@@ -12,7 +12,10 @@ import suggestedCategoryRoutes from "./routes/suggestedCategories.js";
 import alertRoutes from "./routes/alerts.js";
 
 const PORT = process.env.PORT || 4000;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/tax1";
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  throw new Error("MONGODB_URI is required and must point to Atlas MongoDB");
+}
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
