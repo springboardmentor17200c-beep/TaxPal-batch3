@@ -32,6 +32,11 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("");
   const [incomeBracket, setIncomeBracket] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [taxId, setTaxId] = useState("");
+  const [filingStatus, setFilingStatus] = useState("");
+  const [professionalRole, setProfessionalRole] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -44,7 +49,18 @@ const Signup = () => {
     }
     setLoading(true);
     try {
-      await register({ name: fullName.trim(), email: email.trim().toLowerCase(), password, country, income_bracket: incomeBracket });
+      await register({
+        name: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        country,
+        income_bracket: incomeBracket,
+        phone,
+        address,
+        tax_id: taxId,
+        filing_status: filingStatus,
+        professional_role: professionalRole,
+      });
       navigate("/dashboard");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign up failed");
@@ -98,6 +114,39 @@ const Signup = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input id="phone" placeholder="Enter your phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" placeholder="Enter your address" value={address} onChange={(e) => setAddress(e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="taxId">Tax ID</Label>
+              <Input id="taxId" placeholder="Enter your tax ID" value={taxId} onChange={(e) => setTaxId(e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filing Status</Label>
+              <Select value={filingStatus} onValueChange={setFilingStatus}>
+                <SelectTrigger><SelectValue placeholder="Select filing status" /></SelectTrigger>
+                <SelectContent>
+                  {["Single", "Married Filing Jointly", "Married Filing Separately", "Head of Household"].map((status) => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="professionalRole">Professional Role</Label>
+              <Input id="professionalRole" placeholder="Enter your professional role" value={professionalRole} onChange={(e) => setProfessionalRole(e.target.value)} />
+            </div>
+
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating..." : "Create Account"}</Button>
           </form>
 

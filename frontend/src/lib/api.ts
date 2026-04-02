@@ -8,28 +8,39 @@ export async function api<T>(
   path: string,
   options: RequestInit & { token?: string | null } = {}
 ): Promise<T> {
-  const { token = getToken(), ...init } = options;
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(init.headers as Record<string, string>),
-  };
-  if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
-  if (res.status === 204) return undefined as T;
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || res.statusText || "Request failed");
-  return data as T;
+  try {
+    const { token = getToken(), ...init } = options;
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      ...(init.headers as Record<string, string>),
+    };
+    if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+    if (res.status === 204) return undefined as T;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.statusText || "Request failed");
+    return data as T;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Network error: unable to connect to backend";
+    throw new Error(
+      `${message}. Ensure backend is running at ${API_BASE} and your .env values are correct.`
+    );
+  }
 }
+
 
 export const authApi = {
   login: (email: string, password: string) =>
-    api<{ user: { id: string; name: string; email: string }; token: string }>("/auth/login", {
+    api<{ user: { id: string; name: string; email: string; country?: string; income_bracket?: string; phone?: string; address?: string; tax_id?: string; filing_status?: string; professional_role?: string }; token: string }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
       token: null,
     }),
-  register: (body: { name: string; email: string; password: string; country?: string; income_bracket?: string }) =>
-    api<{ user: { id: string; name: string; email: string }; token: string }>("/auth/register", {
+  register: (body: { name: string; email: string; password: string; country?: string; income_bracket?: string; phone?: string; address?: string; tax_id?: string; filing_status?: string; professional_role?: string }) =>
+    api<{ user: { id: string; name: string; email: string; country?: string; income_bracket?: string; phone?: string; address?: string; tax_id?: string; filing_status?: string; professional_role?: string }; token: string }>("/auth/register", {
       method: "POST",
       body: JSON.stringify(body),
       token: null,

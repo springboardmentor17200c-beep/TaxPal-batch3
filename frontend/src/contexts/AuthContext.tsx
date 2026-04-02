@@ -13,6 +13,11 @@ interface User {
   email: string;
   country?: string;
   income_bracket?: string;
+  phone?: string;
+  address?: string;
+  tax_id?: string;
+  filing_status?: string;
+  professional_role?: string;
 }
 
 interface AuthContextValue {
@@ -25,6 +30,11 @@ interface AuthContextValue {
     password: string;
     country?: string;
     income_bracket?: string;
+    phone?: string;
+    address?: string;
+    tax_id?: string;
+    filing_status?: string;
+    professional_role?: string;
   }) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -87,8 +97,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: u.id,
         name: u.name,
         email: u.email,
-        country: body.country || "United States", // ← force use selected country
+        country: body.country || "United States",
         income_bracket: body.income_bracket,
+        phone: body.phone,
+        address: body.address,
+        tax_id: body.tax_id,
+        filing_status: body.filing_status,
+        professional_role: body.professional_role,
       };
 
       localStorage.setItem(TOKEN_KEY, t);
