@@ -1,22 +1,38 @@
 import axios from "axios";
 
+const PRODUCTION_API = "https://taxpal-batch3.onrender.com/api";
+
+/** Placeholder URLs from docs/examples — must not be used in production builds. */
+const PLACEHOLDER_HOSTS = /your-api\.onrender\.com|your-backend\.onrender\.com/i;
+
 /** Ensures API base always ends with /api (backend mounts routes under /api). */
 export function resolveApiBase(): string {
-  const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  let fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? "";
+
+  // Fix malformed .env lines like "VITE_API_URL= VITE_API_URL=https://..."
+  const urlMatch = fromEnv.match(/https?:\/\/[^\s]+/i);
+  if (urlMatch) {
+    fromEnv = urlMatch[0];
+  }
+
   let base = fromEnv || "http://localhost:4000/api";
+
+  if (PLACEHOLDER_HOSTS.test(base)) {
+    base = PRODUCTION_API;
+  }
 
   base = base.replace(/\/+$/, "");
   if (!base.endsWith("/api")) {
     base = `${base}/api`;
   }
 
-  // Production static site built with localhost env still talks to the live API
+  // Live site on Render must not call localhost
   if (
     typeof window !== "undefined" &&
     window.location.hostname.endsWith(".onrender.com") &&
     /localhost|127\.0\.0\.1/.test(base)
   ) {
-    base = "https://taxpal-batch3.onrender.com/api";
+    base = PRODUCTION_API;
   }
 
   return base;
@@ -75,7 +91,6 @@ axiosInstance.interceptors.response.use(
       error.message ||
       "An unexpected error occurred";
 
-    // Joi validation messages can be long comma-separated strings
     if (typeof message === "string" && message.includes('"') && message.includes(" is ")) {
       message = message
         .split(", ")
