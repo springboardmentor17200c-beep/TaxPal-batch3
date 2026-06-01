@@ -1,21 +1,36 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+import { config } from "../config/index.js";
+import ApiError from "../utils/ApiError.js";
 
 export const auth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
     if (!token) {
-      return res.status(401).json({ error: "Authentication required" });
+      throw new ApiError(401, "Authentication required");
     }
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwt.secret);
     const user = await User.findById(decoded.userId);
-    if (!user) return res.status(401).json({ error: "User not found" });
+    if (!user) {
+      throw new ApiError(401, "User not found");
+    }
     req.user = user;
     next();
   } catch (e) {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    if (e instanceof ApiError) {
+      return next(e);
+    }
+    return next(new ApiError(401, "Invalid or expired token"));
   }
+};
+
+export const authorize = (...roles) => (req, res, next) => {
+  if (!req.user) {
+    return next(new ApiError(401, "Authentication required"));
+  }
+  if (roles.length && !roles.includes(req.user.role)) {
+    return next(new ApiError(403, "Forbidden: Insufficient privileges"));
+  }
+  next();
 };

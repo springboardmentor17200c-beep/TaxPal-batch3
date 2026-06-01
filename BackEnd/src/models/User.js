@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema(
 
     // security settings
     two_factor_enabled: { type: Boolean, default: false },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
   },
   { timestamps: true }
 );

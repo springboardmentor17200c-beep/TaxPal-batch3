@@ -1,36 +1,84 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+import axios from "axios";
 
-function getToken(): string | null {
-  return localStorage.getItem("taxpal_token");
-}
+export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
+const axiosInstance = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("taxpal_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => {
+    // If the response is wrapped in success/data, unwrap it
+    if (response.data && response.data.success !== undefined) {
+      return response.data.data;
+    }
+    return response.data;
+  },
+  (error) => {
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "An unexpected error occurred";
+
+    // Create a normalized Error object to throw
+    const normalizedError = new Error(
+      `${message}. Ensure backend is running at ${API_BASE} and your configuration is correct.`
+    );
+    return Promise.reject(normalizedError);
+  }
+);
+
+// Generic api helper to mimic the old api fetch-wrapper signature if needed
 export async function api<T>(
   path: string,
-  options: RequestInit & { token?: string | null } = {}
+  options: { method?: string; body?: string; headers?: Record<string, string>; token?: string | null } = {}
 ): Promise<T> {
+  const method = (options.method || "GET").toUpperCase();
+  const headers = options.headers || {};
+
+  const config: any = {
+    method,
+    url: path,
+    headers,
+  };
+
+  if (options.body) {
+    config.data = JSON.parse(options.body);
+  }
+
+  // Handle manual token overrides if any
+  if (options.token !== undefined) {
+    if (options.token) {
+      config.headers.Authorization = `Bearer ${options.token}`;
+    } else {
+      delete config.headers.Authorization;
+    }
+  }
+
   try {
-    const { token = getToken(), ...init } = options;
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...(init.headers as Record<string, string>),
-    };
-    if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
-    if (res.status === 204) return undefined as T;
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || res.statusText || "Request failed");
-    return data as T;
+    const response = await axiosInstance(config);
+    return response as unknown as T;
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Network error: unable to connect to backend";
-    throw new Error(
-      `${message}. Ensure backend is running at ${API_BASE} and your .env values are correct.`
-    );
+    throw error;
   }
 }
-
 
 export const authApi = {
   login: (email: string, password: string) =>

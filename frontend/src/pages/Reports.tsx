@@ -53,9 +53,10 @@ export default function Reports() {
   const downloadReport = async (id: string) => {
     try {
       const token = localStorage.getItem("taxpal_token");
+      const { API_BASE } = await import("@/lib/api");
 
       const res = await fetch(
-        `http://localhost:4000/api/reports/download/${id}`,
+        `${API_BASE}/reports/download/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

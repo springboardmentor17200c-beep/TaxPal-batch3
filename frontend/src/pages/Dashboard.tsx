@@ -16,18 +16,28 @@ const Dashboard = () => {
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const { user } = useAuth();
-  const { data: summary } = useQuery({
+  const { data: summary, isLoading: isSummaryLoading, isError: isSummaryError, error: summaryError, refetch: refetchSummary } = useQuery({
     queryKey: ["transactions-summary"],
     queryFn: () => transactionsApi.summary(),
   });
-  const { data: transactions = [] } = useQuery({
+  const { data: transactions = [], isLoading: isTransactionsLoading, isError: isTransactionsError, error: transactionsError, refetch: refetchTransactions } = useQuery({
     queryKey: ["transactions"],
     queryFn: () => transactionsApi.list(),
   });
-  const { data: taxEstimates = [] } = useQuery({
+  const { data: taxEstimates = [], isLoading: isEstimatesLoading, isError: isEstimatesError, error: estimatesError, refetch: refetchEstimates } = useQuery({
     queryKey: ["tax-estimates"],
     queryFn: () => taxEstimatesApi.list(),
   });
+
+  const isLoading = isSummaryLoading || isTransactionsLoading || isEstimatesLoading;
+  const isError = isSummaryError || isTransactionsError || isEstimatesError;
+  const errorMessage = summaryError?.message || transactionsError?.message || estimatesError?.message || "Failed to load dashboard data.";
+
+  const handleRetry = () => {
+    refetchSummary();
+    refetchTransactions();
+    refetchEstimates();
+  };
 
   const totalTaxDue = (taxEstimates as Array<{ estimated_tax: number }>).reduce(
     (sum, est) => sum + (est.estimated_tax || 0),
@@ -59,47 +69,62 @@ const Dashboard = () => {
             </div>
           </header>
 
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* <StatCard title="Monthly Income" value={`$${(summary?.income ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} subtitle="From transactions" type="up" /> */}
-              <StatCard
-                title="Monthly Income"
-                value={Number(summary?.income) || 0}
-                subtitle="From transactions"
-                type="up"
-              />
-
-              <StatCard
-                title="Monthly Expenses"
-                value={Number(summary?.expense) || 0}
-                subtitle="From transactions"
-                type="down"
-              />
-
-              <StatCard
-                title="Estimated Tax Due"
-                value={totalTaxDue}
-                subtitle="From tax estimates"
-                type="warning"
-              />
-
-              <StatCard
-                title="Net"
-                value={Number(summary?.net) || 0}
-                subtitle={summary && summary.net >= 0 ? "Positive cash flow" : "Negative cash flow"}
-                type="target"
-              />
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground text-sm">Loading your financial data...</p>
             </div>
+          ) : isError ? (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 max-w-xl mx-auto my-12 text-center space-y-4 shadow-sm">
+              <h3 className="text-lg font-semibold text-destructive">Unable to load data</h3>
+              <p className="text-sm text-muted-foreground">{errorMessage}</p>
+              <Button onClick={handleRetry} variant="outline" className="mx-auto border-destructive/30 hover:bg-destructive/10 hover:text-destructive">
+                Retry Connection
+              </Button>
+            </div>
+          ) : (
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* <StatCard title="Monthly Income" value={`$${(summary?.income ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} subtitle="From transactions" type="up" /> */}
+                <StatCard
+                  title="Monthly Income"
+                  value={Number(summary?.income) || 0}
+                  subtitle="From transactions"
+                  type="up"
+                />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2">
-                <IncomeExpenseChart transactions={transactions} />
+                <StatCard
+                  title="Monthly Expenses"
+                  value={Number(summary?.expense) || 0}
+                  subtitle="From transactions"
+                  type="down"
+                />
+
+                <StatCard
+                  title="Estimated Tax Due"
+                  value={totalTaxDue}
+                  subtitle="From tax estimates"
+                  type="warning"
+                />
+
+                <StatCard
+                  title="Net"
+                  value={Number(summary?.net) || 0}
+                  subtitle={summary && summary.net >= 0 ? "Positive cash flow" : "Negative cash flow"}
+                  type="target"
+                />
               </div>
-              <ExpenseBreakdown transactions={transactions} />
-            </div>
 
-            <TransactionsTable transactions={transactions} />
-          </div>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                  <IncomeExpenseChart transactions={transactions} />
+                </div>
+                <ExpenseBreakdown transactions={transactions} />
+              </div>
+
+              <TransactionsTable transactions={transactions} />
+            </div>
+          )}
         </main>
       </div>
 
