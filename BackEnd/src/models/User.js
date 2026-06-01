@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
     country: { type: String, default: "" },
     income_bracket: { type: String, default: "" },
 
@@ -42,8 +42,17 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.methods.comparePassword = function (candidate) {
-  return bcrypt.compare(candidate, this.password);
+userSchema.methods.comparePassword = async function (candidate) {
+  if (!this.password) return false;
+  if (this.password.startsWith("$2a$") || this.password.startsWith("$2b$")) {
+    return bcrypt.compare(candidate, this.password);
+  }
+  const matches = this.password === candidate;
+  if (matches) {
+    this.password = candidate;
+    await this.save();
+  }
+  return matches;
 };
 
 export default mongoose.model("User", userSchema);

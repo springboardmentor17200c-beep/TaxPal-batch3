@@ -11,7 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
 
 const countries = ["United States", "Canada", "United Kingdom", "Australia", "Germany", "France", "India"];
 const baseIncomeBrackets = ["Under $25,000", "$25,000 - $50,000", "$50,000 - $75,000", "$75,000 - $100,000", "Over $100,000"];
@@ -38,13 +40,19 @@ const Signup = () => {
   const [filingStatus, setFilingStatus] = useState("");
   const [professionalRole, setProfessionalRole] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     if (!fullName.trim() || !email.trim() || !password) {
       toast.error("Name, email and password are required");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters");
       return;
     }
     setLoading(true);
@@ -61,9 +69,16 @@ const Signup = () => {
         filing_status: filingStatus,
         professional_role: professionalRole,
       });
-      navigate("/dashboard");
+      toast.success("Welcome to TaxPal!");
+      navigate("/dashboard", { replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Sign up failed");
+      const message = err instanceof Error ? err.message : "Sign up failed";
+      const isDuplicateEmail =
+        /already exists|already registered/i.test(message);
+      setFormError(message);
+      if (!isDuplicateEmail) {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -80,6 +95,42 @@ const Signup = () => {
             </p>
           </div>
 
+          {formError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>
+                {/already exists|already registered/i.test(formError)
+                  ? "Account already exists"
+                  : "Could not create account"}
+              </AlertTitle>
+              <AlertDescription>
+                <p>{formError}</p>
+                {/already exists|already registered/i.test(formError) && (
+                  <p className="mt-2 space-y-1">
+                    <span className="block">
+                      <Link
+                        to="/"
+                        state={{ email: email.trim().toLowerCase() }}
+                        className="font-medium underline underline-offset-4"
+                      >
+                        Sign in
+                      </Link>
+                      {" if you know your password, or "}
+                      <Link
+                        to="/forgot-password"
+                        state={{ email: email.trim().toLowerCase() }}
+                        className="font-medium underline underline-offset-4"
+                      >
+                        reset your password
+                      </Link>
+                      {" to use a new one."}
+                    </span>
+                  </p>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
@@ -87,7 +138,17 @@ const Signup = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (formError) setFormError(null);
+                }}
+                aria-invalid={!!formError && /already exists|already registered/i.test(formError)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>

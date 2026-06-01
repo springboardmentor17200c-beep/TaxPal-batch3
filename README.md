@@ -4,6 +4,12 @@ MERN stack: **M**ongoDB · **E**xpress · **R**eact · **N**ode.
 
 ---
 
+## Production deployment (Render)
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for MongoDB Atlas, environment variables, and Render Web Service + Static Site setup. A `render.yaml` blueprint is included at the repo root.
+
+---
+
 ## Instructions: Start Backend and Frontend
 
 ### Prerequisites

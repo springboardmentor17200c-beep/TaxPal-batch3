@@ -1,35 +1,53 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/lib/api";
+import { toast } from "sonner";
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const prefilledEmail =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    "email" in location.state &&
+    typeof (location.state as { email?: string }).email === "string"
+      ? (location.state as { email: string }).email
+      : "";
+
+  const [email, setEmail] = useState(prefilledEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!email.trim()) newErrors.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) newErrors.email = "Invalid email address";
     if (!password) newErrors.password = "Password is required";
-    else if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    else if (password.length < 8) newErrors.password = "Password must be at least 8 characters";
     if (!confirmPassword) newErrors.confirmPassword = "Please confirm your password";
     else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    toast({ title: "Password reset successful", description: "You can now sign in with your new password." });
-    navigate("/");
+    setLoading(true);
+    try {
+      await authApi.resetPassword(email.trim().toLowerCase(), password);
+      toast.success("Password updated. Sign in with your new password.");
+      navigate("/", { state: { email: email.trim().toLowerCase() } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not reset password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,7 +57,7 @@ const ForgotPassword = () => {
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-card-foreground">Reset Password</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Enter your email and new password
+              Set a new password for your TaxPal account
             </p>
           </div>
 
@@ -83,8 +101,8 @@ const ForgotPassword = () => {
               {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
             </div>
 
-            <Button type="submit" className="w-full">
-              Submit Password
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Updating..." : "Update Password"}
             </Button>
           </form>
 

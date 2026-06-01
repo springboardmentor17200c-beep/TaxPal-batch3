@@ -25,9 +25,36 @@ const sanitizeUser = (user) => ({
 export const register = catchAsync(async (req, res) => {
   const { name, email, password, country, income_bracket, phone, address, tax_id, filing_status, professional_role } = req.body;
   const emailClean = email.trim().toLowerCase();
-  const existing = await User.findOne({ email: emailClean });
+  const existing = await User.findOne({ email: emailClean }).select("+password");
   if (existing) {
-    throw new ApiError(400, "Email already registered");
+    const matches = await existing.comparePassword(password);
+    if (!matches) {
+      return successResponse(
+        res,
+        200,
+        {
+          requiresPasswordReset: true,
+          email: emailClean,
+        },
+        "This email is already registered. Sign in or reset your password."
+      );
+    }
+    const token = jwt.sign({ userId: existing._id }, config.jwt.secret, { expiresIn: "7d" });
+    return successResponse(
+      res,
+      200,
+      {
+        user: {
+          id: existing._id,
+          name: existing.name,
+          email: existing.email,
+          country: existing.country,
+          income_bracket: existing.income_bracket,
+        },
+        token,
+      },
+      "Signed in to your existing account"
+    );
   }
 
   const user = await User.create({
@@ -53,7 +80,7 @@ export const register = catchAsync(async (req, res) => {
 export const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   const emailClean = email.trim().toLowerCase();
-  const user = await User.findOne({ email: emailClean });
+  const user = await User.findOne({ email: emailClean }).select("+password");
   if (!user) {
     throw new ApiError(401, "Invalid email or password");
   }
@@ -127,11 +154,32 @@ export const updateSecurity = catchAsync(async (req, res) => {
 
 export const changePassword = catchAsync(async (req, res) => {
   const { current_password, new_password } = req.body;
-  const matches = await req.user.comparePassword(current_password);
+  const user = await User.findById(req.user._id).select("+password");
+  if (!user) {
+    throw new ApiError(401, "User not found");
+  }
+  const matches = await user.comparePassword(current_password);
   if (!matches) {
     throw new ApiError(401, "Current password is incorrect");
   }
-  req.user.password = new_password;
-  await req.user.save();
+  user.password = new_password;
+  await user.save();
   return res.status(204).send();
+});
+
+export const resetPassword = catchAsync(async (req, res) => {
+  const { email, password } = req.body;
+  const emailClean = email.trim().toLowerCase();
+  const user = await User.findOne({ email: emailClean }).select("+password");
+  if (!user) {
+    return successResponse(
+      res,
+      200,
+      {},
+      "If an account exists for this email, the password has been updated."
+    );
+  }
+  user.password = password;
+  await user.save();
+  return successResponse(res, 200, {}, "Password updated successfully. You can sign in now.");
 });

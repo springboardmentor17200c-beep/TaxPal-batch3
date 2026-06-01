@@ -66,9 +66,7 @@ export default function Settings() {
   useEffect(() => {
   const fetchCategories = async () => {
     try {
-      const data = await api<any[]>("/suggested-categories");
-
-      console.log("DATA FROM BACKEND:", data);
+      const data = await api<Array<{ _id: string; name: string; type: string; color?: string }>>("/suggested-categories");
 
       const expense = data.filter((c) => c.type === "expense");
       const income = data.filter((c) => c.type === "income");

@@ -1,26 +1,46 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const prefilledEmail =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    "email" in location.state &&
+    typeof (location.state as { email?: string }).email === "string"
+      ? (location.state as { email: string }).email
+      : "";
+
+  const [email, setEmail] = useState(prefilledEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+    if (!email.trim() || !password) {
+      toast.error("Email and password are required");
+      return;
+    }
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await login(email.trim().toLowerCase(), password);
       navigate("/dashboard");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+      const message =
+        err instanceof Error ? err.message : "Login failed";
+      setFormError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -36,6 +56,30 @@ const Login = () => {
               Sign in to your account to continue
             </p>
           </div>
+
+          {formError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Could not sign in</AlertTitle>
+              <AlertDescription>
+                <p>{formError}</p>
+                <p className="mt-2">
+                  <Link
+                    to="/forgot-password"
+                    state={{ email: email.trim().toLowerCase() }}
+                    className="font-medium underline underline-offset-4"
+                  >
+                    Reset your password
+                  </Link>
+                  {" or "}
+                  <Link to="/signup" className="font-medium underline underline-offset-4">
+                    create a new account
+                  </Link>
+                  .
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

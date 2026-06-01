@@ -10,8 +10,8 @@ router.use(auth);
 
 router.get("/", reportController.getReports);
 router.post("/", validate(reportValidation.createReport), reportController.createReport);
+router.get("/download/:id", reportController.downloadReport);
 router.get("/:id", reportController.getReport);
 router.delete("/:id", reportController.deleteReport);
-router.get("/download/:id", reportController.downloadReport);
 
 export default router;

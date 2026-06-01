@@ -6,6 +6,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { authApi } from "@/lib/api";
 
 interface User {
   id: string;
@@ -59,12 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.getItem(TOKEN_KEY)
   );
 
-  // ✅ LOGIN
   const login = useCallback(async (email: string, password: string) => {
-    const { authApi } = await import("@/lib/api");
-    const { user: u, token: t } = await authApi.login(email, password);
+    const { user: u, token: t } = await authApi.login(email.trim().toLowerCase(), password);
 
-    // 🔥 Force store country even if backend doesn't return it properly
     const finalUser: User = {
       id: u.id,
       name: u.name,
@@ -80,7 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(finalUser);
   }, []);
 
-  // ✅ REGISTER (THIS IS THE IMPORTANT FIX)
   const register = useCallback(
     async (body: {
       name: string;
@@ -88,17 +85,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: string;
       country?: string;
       income_bracket?: string;
+      phone?: string;
+      address?: string;
+      tax_id?: string;
+      filing_status?: string;
+      professional_role?: string;
     }) => {
-      const { authApi } = await import("@/lib/api");
-      const { user: u, token: t } = await authApi.register(body);
+      let u: { id: string; name: string; email: string; country?: string; income_bracket?: string };
+      let t: string;
 
-      // 🔥 THIS FIX SOLVES EVERYTHING
+      const result = await authApi.register(body);
+
+      if ("requiresPasswordReset" in result && result.requiresPasswordReset) {
+        await authApi.resetPassword(body.email, body.password);
+        const loginResult = await authApi.login(body.email, body.password);
+        u = loginResult.user;
+        t = loginResult.token;
+      } else {
+        u = result.user;
+        t = result.token;
+      }
+
       const finalUser: User = {
         id: u.id,
         name: u.name,
         email: u.email,
-        country: body.country || "United States",
-        income_bracket: body.income_bracket,
+        country: body.country || u.country || "United States",
+        income_bracket: body.income_bracket || u.income_bracket,
         phone: body.phone,
         address: body.address,
         tax_id: body.tax_id,

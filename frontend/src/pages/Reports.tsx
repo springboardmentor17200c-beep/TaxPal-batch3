@@ -52,27 +52,10 @@ export default function Reports() {
 
   const downloadReport = async (id: string) => {
     try {
-      const token = localStorage.getItem("taxpal_token");
-      const { API_BASE } = await import("@/lib/api");
-
-      const res = await fetch(
-        `${API_BASE}/reports/download/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "report.pdf";
-      a.click();
+      await reportsApi.download(id);
+      toast.success("Report downloaded");
     } catch (error) {
-      console.error("Download failed:", error);
+      toast.error(error instanceof Error ? error.message : "Download failed");
     }
   };
 

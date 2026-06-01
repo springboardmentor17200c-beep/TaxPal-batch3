@@ -1,7 +1,7 @@
 {
-  "name": "ai-resume-checker-backend",
+  "name": "taxpal-backend",
   "version": "1.0.0",
-  "description": "Backend for AI Resume Checker",
+  "description": "TaxPal MERN API — personal finance and tax estimation",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -22,6 +22,7 @@
     "dotenv": "^16.6.1",
     "exceljs": "^3.4.0",
     "express": "^4.21.0",
+    "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.5.1",
     "helmet": "^7.2.0",
     "joi": "^18.2.1",

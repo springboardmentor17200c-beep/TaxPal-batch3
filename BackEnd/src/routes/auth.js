@@ -8,6 +8,7 @@ const router = Router();
 
 router.post("/register", validate(authValidation.register), authController.register);
 router.post("/login", validate(authValidation.login), authController.login);
+router.post("/reset-password", validate(authValidation.resetPassword), authController.resetPassword);
 router.get("/profile", auth, authController.getProfile);
 router.patch("/profile", auth, validate(authValidation.updateProfile), authController.updateProfile);
 router.get("/notifications", auth, authController.getNotifications);

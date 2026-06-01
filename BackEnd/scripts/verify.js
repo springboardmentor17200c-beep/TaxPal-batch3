@@ -1,30 +1,38 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/tax1";
-const API_URL = "http://localhost:4000";
+const MONGODB_URI = process.env.MONGODB_URI;
+const API_URL = process.env.API_URL || `http://localhost:${process.env.PORT || 4000}`;
 
-async function verify() {
-  console.log("1. Connecting to MongoDB:", MONGODB_URI);
+async function main() {
+  if (!MONGODB_URI) {
+    console.error("FAIL – Set MONGODB_URI in BackEnd/.env");
+    process.exit(1);
+  }
+
+  console.log("1. Connecting to MongoDB...");
   await mongoose.connect(MONGODB_URI);
-  console.log("   OK – MongoDB connected (database: tax1)\n");
+  console.log("   OK – MongoDB connected\n");
 
-  console.log("2. Checking API health:", API_URL + "/api/health");
+  console.log("2. Checking API health:", `${API_URL}/health`);
   try {
-    const res = await fetch(API_URL + "/api/health");
+    const res = await fetch(`${API_URL}/health`);
     const data = await res.json();
-    if (data.ok) console.log("   OK – Backend API is running\n");
-    else console.log("   Response:", data);
+    if (res.ok && data.status === "OK") {
+      console.log("   OK – Backend health check passed\n");
+    } else {
+      console.log("   Unexpected response:", data);
+    }
   } catch (e) {
-    console.log("   FAIL – Is the backend running? (npm run dev in backend folder)");
+    console.log("   FAIL – Is the backend running? (npm run dev in BackEnd)");
     console.log("   Error:", e.message);
   }
 
   await mongoose.disconnect();
-  console.log("Done. Backend and DB are ready; start frontend with: cd frontend && npm run dev");
+  console.log("Done.");
 }
 
-verify().catch((e) => {
-  console.error(e);
+main().catch((err) => {
+  console.error(err);
   process.exit(1);
 });

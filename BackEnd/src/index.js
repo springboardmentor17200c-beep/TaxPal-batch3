@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
 import morgan from "morgan";
+import mongoose from "mongoose";
 import { config } from "./config/index.js";
 import { connectDB } from "./config/db.js";
 import { logger } from "./utils/logger.js";
@@ -19,24 +21,30 @@ import alertRoutes from "./routes/alerts.js";
 
 const app = express();
 
-// Secure HTTP headers with Helmet
+// Required behind Render's reverse proxy for rate limiting and secure cookies
+app.set("trust proxy", 1);
+
 app.use(helmet());
 
-// Logging middleware using Winston
 const morganFormat = config.env === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream: { write: (message) => logger.info(message.trim()) } }));
 
-// CORS configuration for frontend domain
-app.use(cors({ origin: config.clientUrl, credentials: true }));
+app.use(
+  cors({
+    origin: config.clientUrls,
+    credentials: true,
+  })
+);
 
-// Parse request body
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-// Apply rate limiting to all requests
+// Prevent NoSQL injection via query/body operators
+app.use(mongoSanitize());
+
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: config.env === "production" ? 200 : 500,
   message: {
     success: false,
     message: "Too many requests from this IP, please try again after 15 minutes",
@@ -46,7 +54,34 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Mount API routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: {
+    success: false,
+    message: "Too many authentication attempts, please try again later",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/reset-password", authLimiter);
+
+// Render health check (required format)
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "OK" });
+});
+
+app.get("/api/health", (_req, res) => {
+  const dbReady = mongoose.connection.readyState === 1;
+  res.status(dbReady ? 200 : 503).json({
+    status: dbReady ? "OK" : "DEGRADED",
+    database: dbReady ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/budgets", budgetRoutes);
@@ -55,26 +90,49 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/suggested-categories", suggestedCategoryRoutes);
 app.use("/api/alerts", alertRoutes);
 
-// Health check endpoint
-app.get("/api/health", (req, res) => res.json({ status: "healthy", timestamp: new Date() }));
-
-// Send back a 404 error for any unknown api request
-app.use((req, res, next) => {
+app.use((_req, _res, next) => {
   next(new ApiError(404, "Not found"));
 });
 
-// Convert error to ApiError if needed
 app.use(errorConverter);
-
-// Centralized error handler
 app.use(errorHandler);
 
-// Connect to Database and start server
+let server;
+
 const startServer = async () => {
   await connectDB();
-  app.listen(config.port, "0.0.0.0", () => {
-    logger.info(`TaxPal API running at http://0.0.0.0:${config.port} in ${config.env} mode`);
+  server = app.listen(config.port, "0.0.0.0", () => {
+    logger.info(`TaxPal API running on port ${config.port} (${config.env})`);
+  });
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      logger.error(`Port ${config.port} is already in use`);
+    } else {
+      logger.error(`Server error: ${err.message}`);
+    }
+    process.exit(1);
   });
 };
 
-startServer();
+const shutdown = async (signal) => {
+  logger.info(`${signal} received: closing server`);
+  if (server) {
+    server.close(async () => {
+      await mongoose.connection.close(false);
+      logger.info("MongoDB connection closed");
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+startServer().catch((err) => {
+  logger.error(`Failed to start server: ${err.message}`);
+  process.exit(1);
+});
+
+export default app;
