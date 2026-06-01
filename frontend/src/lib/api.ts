@@ -1,15 +1,24 @@
 import axios from "axios";
 
-const PRODUCTION_API = "https://taxpal-batch3.onrender.com/api";
+/** Live Render backend (all API routes are under /api). */
+export const PRODUCTION_API = "https://taxpal-batch3.onrender.com/api";
+const API_HOST = "taxpal-batch3.onrender.com";
 
-/** Placeholder URLs from docs/examples — must not be used in production builds. */
-const PLACEHOLDER_HOSTS = /your-api\.onrender\.com|your-backend\.onrender\.com/i;
+/** Placeholder / doc URLs — never call these in production. */
+const INVALID_API_HOSTS =
+  /your-api\.onrender\.com|your-backend\.onrender\.com|YOUR-API/i;
 
 /** Ensures API base always ends with /api (backend mounts routes under /api). */
 export function resolveApiBase(): string {
-  let fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? "";
+  // Runtime: deployed static site on Render must hit the real API (ignores bad baked env)
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host.endsWith(".onrender.com") && host !== API_HOST) {
+      return PRODUCTION_API;
+    }
+  }
 
-  // Fix malformed .env lines like "VITE_API_URL= VITE_API_URL=https://..."
+  let fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? "";
   const urlMatch = fromEnv.match(/https?:\/\/[^\s]+/i);
   if (urlMatch) {
     fromEnv = urlMatch[0];
@@ -17,7 +26,7 @@ export function resolveApiBase(): string {
 
   let base = fromEnv || "http://localhost:4000/api";
 
-  if (PLACEHOLDER_HOSTS.test(base)) {
+  if (INVALID_API_HOSTS.test(base)) {
     base = PRODUCTION_API;
   }
 
@@ -26,7 +35,6 @@ export function resolveApiBase(): string {
     base = `${base}/api`;
   }
 
-  // Live site on Render must not call localhost
   if (
     typeof window !== "undefined" &&
     window.location.hostname.endsWith(".onrender.com") &&
@@ -38,7 +46,8 @@ export function resolveApiBase(): string {
   return base;
 }
 
-export const API_BASE = resolveApiBase();
+/** @deprecated Use resolveApiBase() — value is resolved per request in interceptors. */
+export const API_BASE = PRODUCTION_API;
 
 export class ApiRequestError extends Error {
   statusCode?: number;
@@ -51,7 +60,7 @@ export class ApiRequestError extends Error {
 }
 
 const axiosInstance = axios.create({
-  baseURL: API_BASE,
+  baseURL: PRODUCTION_API,
   headers: {
     "Content-Type": "application/json",
   },
@@ -59,6 +68,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
+    config.baseURL = resolveApiBase();
     const token = localStorage.getItem("taxpal_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -220,7 +230,7 @@ export const reportsApi = {
     api<{ id: string }>("/reports", { method: "POST", body: JSON.stringify(body) }),
   download: async (id: string, filename = "TaxPal-Report.pdf") => {
     const token = localStorage.getItem("taxpal_token");
-    const res = await fetch(`${API_BASE}/reports/download/${id}`, {
+    const res = await fetch(`${resolveApiBase()}/reports/download/${id}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) {
