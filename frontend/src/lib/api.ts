@@ -1,53 +1,26 @@
 import axios from "axios";
 
-/** Live Render backend (all API routes are under /api). */
-export const PRODUCTION_API = "https://taxpal-batch3.onrender.com/api";
-const API_HOST = "taxpal-batch3.onrender.com";
+const DEFAULT_API_BASE = "https://taxpal-batch3.onrender.com/api";
 
-/** Placeholder / doc URLs — never call these in production. */
-const INVALID_API_HOSTS =
-  /your-api\.onrender\.com|your-backend\.onrender\.com|YOUR-API/i;
-
-/** Ensures API base always ends with /api (backend mounts routes under /api). */
-export function resolveApiBase(): string {
-  // Runtime: deployed static site on Render must hit the real API (ignores bad baked env)
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host.endsWith(".onrender.com") && host !== API_HOST) {
-      return PRODUCTION_API;
-    }
+/** Normalize env URL: reject placeholders, ensure /api suffix. */
+function normalizeApiBase(raw?: string): string {
+  const value = raw?.trim();
+  if (
+    !value ||
+    /your-api\.onrender\.com|your-backend\.onrender\.com/i.test(value)
+  ) {
+    return DEFAULT_API_BASE;
   }
-
-  let fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? "";
-  const urlMatch = fromEnv.match(/https?:\/\/[^\s]+/i);
-  if (urlMatch) {
-    fromEnv = urlMatch[0];
-  }
-
-  let base = fromEnv || "http://localhost:4000/api";
-
-  if (INVALID_API_HOSTS.test(base)) {
-    base = PRODUCTION_API;
-  }
-
-  base = base.replace(/\/+$/, "");
+  let base = value.replace(/\/+$/, "");
   if (!base.endsWith("/api")) {
     base = `${base}/api`;
   }
-
-  if (
-    typeof window !== "undefined" &&
-    window.location.hostname.endsWith(".onrender.com") &&
-    /localhost|127\.0\.0\.1/.test(base)
-  ) {
-    base = PRODUCTION_API;
-  }
-
   return base;
 }
 
-/** @deprecated Use resolveApiBase() — value is resolved per request in interceptors. */
-export const API_BASE = PRODUCTION_API;
+export const API_BASE = normalizeApiBase(
+  import.meta.env.VITE_API_URL || DEFAULT_API_BASE
+);
 
 export class ApiRequestError extends Error {
   statusCode?: number;
@@ -60,7 +33,7 @@ export class ApiRequestError extends Error {
 }
 
 const axiosInstance = axios.create({
-  baseURL: PRODUCTION_API,
+  baseURL: API_BASE,
   headers: {
     "Content-Type": "application/json",
   },
@@ -68,7 +41,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    config.baseURL = resolveApiBase();
+    config.baseURL = API_BASE;
     const token = localStorage.getItem("taxpal_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -80,6 +53,9 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => {
+    if (response.config.responseType === "blob") {
+      return response;
+    }
     if (response.data && response.data.success !== undefined) {
       return response.data.data;
     }
@@ -230,13 +206,11 @@ export const reportsApi = {
     api<{ id: string }>("/reports", { method: "POST", body: JSON.stringify(body) }),
   download: async (id: string, filename = "TaxPal-Report.pdf") => {
     const token = localStorage.getItem("taxpal_token");
-    const res = await fetch(`${resolveApiBase()}/reports/download/${id}`, {
+    const response = await axiosInstance.get(`/reports/download/${id}`, {
+      responseType: "blob",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!res.ok) {
-      throw new Error("Failed to download report");
-    }
-    const blob = await res.blob();
+    const blob = response.data as Blob;
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

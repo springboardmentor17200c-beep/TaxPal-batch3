@@ -44,7 +44,7 @@ https://taxpal-frontend.onrender.com,https://taxpal.onrender.com
 After deploy, verify:
 
 ```bash
-curl https://YOUR-API.onrender.com/health
+curl https://taxpal-batch3.onrender.com/health
 # {"status":"OK"}
 ```
 
@@ -104,7 +104,7 @@ npm run preview
 |-------|-----|
 | CORS errors | Set `CLIENT_URL` to the exact browser origin |
 | 401 on all routes | Check `VITE_API_URL` ends with `/api` |
-| 404 to `your-api.onrender.com` | Replace placeholder: use `https://taxpal-batch3.onrender.com/api` in Render env, then rebuild frontend |
+| 404 to `taxpal-batch3.onrender.com` | Replace placeholder: use `https://taxpal-batch3.onrender.com/api` in Render env, then rebuild frontend |
 | Config validation error on boot | `JWT_SECRET` ≥ 32 chars in production |
 | MongoDB connection failed | Atlas IP allowlist and correct `MONGODB_URI` |
 | Blank page on refresh | Add SPA rewrite to `/index.html` |
