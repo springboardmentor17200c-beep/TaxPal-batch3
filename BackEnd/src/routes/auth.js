@@ -4,7 +4,7 @@ import authValidation from "../validations/auth.validation.js";
 import { validate } from "../middleware/validate.js";
 import { auth } from "../middleware/auth.js";
 
-const router = Router();
+const router = require("express").Router();
 
 router.post("/register", validate(authValidation.register), authController.register);
 router.post("/login", validate(authValidation.login), authController.login);

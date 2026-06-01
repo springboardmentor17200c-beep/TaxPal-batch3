@@ -1,6 +1,28 @@
 import axios from "axios";
 
-export const API_BASE = import.meta.env.VITE_API_URL || "https://taxpal-batch3.onrender.com/api";
+/** Ensures API base always ends with /api (backend mounts routes under /api). */
+export function resolveApiBase(): string {
+  const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  let base = fromEnv || "http://localhost:4000/api";
+
+  base = base.replace(/\/+$/, "");
+  if (!base.endsWith("/api")) {
+    base = `${base}/api`;
+  }
+
+  // Production static site built with localhost env still talks to the live API
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".onrender.com") &&
+    /localhost|127\.0\.0\.1/.test(base)
+  ) {
+    base = "https://taxpal-batch3.onrender.com/api";
+  }
+
+  return base;
+}
+
+export const API_BASE = resolveApiBase();
 
 export class ApiRequestError extends Error {
   statusCode?: number;
