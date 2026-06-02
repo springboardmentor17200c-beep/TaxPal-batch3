@@ -34,6 +34,7 @@ export class ApiRequestError extends Error {
 
 const axiosInstance = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
