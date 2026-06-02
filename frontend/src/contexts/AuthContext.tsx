@@ -101,9 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const loginResult = await authApi.login(body.email, body.password);
         u = loginResult.user;
         t = loginResult.token;
-      } else {
+      } else if ("token" in result && "user" in result) {
         u = result.user;
         t = result.token;
+      } else {
+        throw new Error("Unexpected response from register API");
       }
 
       const finalUser: User = {
