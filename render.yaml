@@ -26,12 +26,9 @@ services:
     name: taxpal-frontend
     runtime: static
     rootDir: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && VITE_API_URL=https://taxpal-batch3.onrender.com/api npm run build
     staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://taxpal-batch3.onrender.com/api
     routes:
       - type: rewrite
-        source: /^\/(?!.*\.).*$/
+        source: /^(?!.*\.).*$/
         destination: /index.html
