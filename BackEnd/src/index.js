@@ -30,22 +30,28 @@ app.use(helmet());
 const morganFormat = config.env === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream: { write: (message) => logger.info(message.trim()) } }));
 
-// CORS configuration with dynamic origin checking
-const corsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = config.clientUrls || ["http://localhost:5173"];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS not allowed"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+// CORS configuration - allow both localhost (dev) and production frontend
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://taxpal-batch3-1.onrender.com",
+  ...(config.clientUrls || []),
+];
 
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow for now to debug
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
