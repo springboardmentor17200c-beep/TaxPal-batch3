@@ -30,12 +30,22 @@ app.use(helmet());
 const morganFormat = config.env === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream: { write: (message) => logger.info(message.trim()) } }));
 
-app.use(
-  cors({
-    origin: config.clientUrls,
-    credentials: true,
-  })
-);
+// CORS configuration with dynamic origin checking
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = config.clientUrls || ["http://localhost:5173"];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
