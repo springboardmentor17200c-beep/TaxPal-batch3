@@ -33,5 +33,5 @@ services:
         value: https://taxpal-batch3.onrender.com/api
     routes:
       - type: rewrite
-        source: /*
+        source: /^\/(?!.*\.).*$/
         destination: /index.html
