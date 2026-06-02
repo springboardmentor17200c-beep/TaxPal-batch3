@@ -26,6 +26,7 @@ app.set("trust proxy", 1);
 
 app.use(helmet());
 
+// CORS configuration - fixed for production
 const morganFormat = config.env === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream: { write: (message) => logger.info(message.trim()) } }));
 
