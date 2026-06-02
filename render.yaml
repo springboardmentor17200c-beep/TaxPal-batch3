@@ -1,5 +1,6 @@
 # TaxPal — Render Blueprint
 # Docs: https://render.com/docs/blueprint-spec
+# Rebuild trigger: 2024-06-02
 
 services:
   - type: web
